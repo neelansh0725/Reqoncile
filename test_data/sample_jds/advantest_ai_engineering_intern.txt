@@ -1,0 +1,37 @@
+AI Engineering Intern
+Advantest India Pvt. Ltd.
+
+We are looking for high-potential interns to build and evaluate production-oriented AI
+applications, including LLM, RAG, agentic, and machine-learning systems.
+
+Responsibilities
+- Develop AI/ML features, workflows, and backend APIs.
+- Build and evaluate LLM, RAG, and agent-based solutions.
+- Work with structured and unstructured data.
+- Write clean, tested, and maintainable code.
+- Evaluate solutions for quality, reliability, latency, and cost.
+
+Required Qualifications
+- Pursuing or recently completed a degree in AI/ML, Computer Science,
+  Information Technology, Data Science, Electronics, Electrical Engineering,
+  Mechanical Engineering, or a closely related field. Candidates from other
+  disciplines may apply if they demonstrate strong technical ability through
+  substantial projects, research, open-source contributions, or relevant
+  experience.
+- Strong Python skills, including data structures, algorithms, debugging, and
+  object-oriented programming.
+- Solid understanding of software engineering, APIs, databases, Git, and testing.
+- Working knowledge of machine learning fundamentals and applied statistics.
+- At least one substantial AI/ML project beyond tutorials or guided coursework.
+- Ability to clearly explain technical decisions, evaluation methods, limitations,
+  and trade-offs.
+
+Preferred
+Experience with PyTorch, Hugging Face, FastAPI, vector databases, Docker, cloud
+platforms, or LLM evaluation.
+
+Skills Required (tags): Python, Data Structures, Algorithms, Apis, DBMS, Git,
+Testing, Machine Learning, Applied Statistics, Deep Learning, Llm, Rag, Agent
+Based Solutions, Build, Evaluation, Cloud Platforms, Docker, Fastapi, Hugging
+Face, Vector Databases, Python Skills, Software Engineering, Evaluation Methods,
+Technical Decisions, Research, Open Source Contributions

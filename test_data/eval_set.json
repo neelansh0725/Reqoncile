@@ -1,0 +1,186 @@
+{
+  "_about": "T035 labelled eval set. 20 requirement/resume pairs against Best_withoutphoto.pdf, hand-labelled. `paraphrase` restates the requirement without the resume's vocabulary, for the R1 anti-keyword-match test (T037). `rationale` records why the label was chosen so a disagreement is visible rather than silent. One label (Unit testing) was corrected after the first eval run exposed it.",
+  "resume": "test_data/resumes/Best_withoutphoto.pdf",
+  "items": [
+    {
+      "name": "Python",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Strong programming skills in Python",
+      "paraphrase": "writing software in a dynamic scripting language used for data work",
+      "expected": "matched",
+      "rationale": "Listed under Programming and applied in the LendingClub and detection projects."
+    },
+    {
+      "name": "SQL",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Proficiency in SQL",
+      "paraphrase": "querying and reshaping data held in relational tables",
+      "expected": "matched",
+      "rationale": "'Optimized SQL queries to improve database performance' plus SQL in skills."
+    },
+    {
+      "name": "Docker",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Experience with Docker",
+      "paraphrase": "packaging an application so it runs identically on any machine",
+      "expected": "matched",
+      "rationale": "Docker in Tools and in the TeamPulse stack."
+    },
+    {
+      "name": "React",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Frontend development with React",
+      "paraphrase": "building browser interfaces from reusable components",
+      "expected": "matched",
+      "rationale": "React.js in skills and in three separate projects."
+    },
+    {
+      "name": "Apache Airflow",
+      "category": "technical",
+      "necessity": "preferred",
+      "source_text": "Familiarity with Apache Airflow is a plus",
+      "paraphrase": "coordinating multi-step jobs on a recurring timetable with retries",
+      "expected": "matched",
+      "rationale": "'Orchestrated the pipeline with Apache Airflow (5-task DAG with failure handling)'."
+    },
+    {
+      "name": "Data visualization",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Ability to build dashboards and visualize data",
+      "paraphrase": "turning numbers into charts a business reader can act on",
+      "expected": "matched",
+      "rationale": "'Built an interactive Power BI dashboard analyzing retail sales data'."
+    },
+    {
+      "name": "Version control",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Comfortable with version control systems",
+      "paraphrase": "keeping a reviewable history of edits to source code",
+      "expected": "matched",
+      "rationale": "Git and GitHub in Tools; GitHub API integration in TeamPulse."
+    },
+    {
+      "name": "Agile methodology",
+      "category": "soft",
+      "necessity": "required",
+      "source_text": "Experience working in Agile teams",
+      "paraphrase": "working in short iterative delivery cycles with a team",
+      "expected": "weak",
+      "rationale": "Appears only as 'SDLC & Agile fundamentals' under Core Subjects -- coursework, not demonstrated practice."
+    },
+    {
+      "name": "Stakeholder communication",
+      "category": "soft",
+      "necessity": "required",
+      "source_text": "Communicate findings to business stakeholders",
+      "paraphrase": "explaining results to the people who will act on them",
+      "expected": "weak",
+      "rationale": "'Documented actionable business insights' and outreach/coordination work show it, but the resume never frames it as stakeholder communication."
+    },
+    {
+      "name": "Model deployment",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Deploy machine learning models to production",
+      "paraphrase": "making a trained model callable by other software",
+      "expected": "weak",
+      "rationale": "'FastAPI + React application supporting real-time and batch scoring' is serving a model, but deployment is never named."
+    },
+    {
+      "name": "Presentation skills",
+      "category": "soft",
+      "necessity": "preferred",
+      "source_text": "Strong presentation skills are desirable",
+      "paraphrase": "speaking to an audience to persuade them of an idea",
+      "expected": "weak",
+      "rationale": "'Built and pitched the SafeEdu platform to a panel of judges' evidences it; the skill is never named. KNOWN RETRIEVAL LIMIT: the SafeEdu 'pitched to a panel of judges' chunk does not reach top-5 for this query, so the classifier is judging without the evidence. Retrieval issue, not reasoning."
+    },
+    {
+      "name": "Statistical analysis",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Apply statistical analysis to business problems",
+      "paraphrase": "drawing quantitative conclusions from sampled data",
+      "expected": "weak",
+      "rationale": "Credit-risk modelling and engineered ratio features imply it; no statistics vocabulary appears."
+    },
+    {
+      "name": "Kubernetes",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Experience with Kubernetes",
+      "paraphrase": "running containers across a managed cluster",
+      "expected": "gap",
+      "rationale": "Docker is present; container orchestration is not. Adjacency is not evidence."
+    },
+    {
+      "name": "Java",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Proficiency in Java",
+      "paraphrase": "building applications on the JVM",
+      "expected": "gap",
+      "rationale": "Languages listed are C++, JavaScript, Python. JavaScript is not Java."
+    },
+    {
+      "name": "AWS",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Hands-on experience with AWS",
+      "paraphrase": "running workloads on Amazon's cloud platform",
+      "expected": "gap",
+      "rationale": "Azure appears; AWS does not. A different cloud is not this cloud."
+    },
+    {
+      "name": "CI/CD pipelines",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Build and maintain CI/CD pipelines",
+      "paraphrase": "automatically testing and shipping code on every commit",
+      "expected": "gap",
+      "rationale": "Docker and GitHub appear, but nothing shows automated build/test/release."
+    },
+    {
+      "name": "Unit testing",
+      "category": "technical",
+      "necessity": "required",
+      "source_text": "Write unit tests for production code",
+      "paraphrase": "writing automated checks that verify individual functions",
+      "expected": "matched",
+      "rationale": "CORRECTED after T036: the resume does say 'validated and debugged with a pytest unit test suite' (line 37). The original 'gap' label was my error, not a model failure -- the classifier cited the real chunk."
+    },
+    {
+      "name": "Team leadership",
+      "category": "soft",
+      "necessity": "required",
+      "source_text": "Lead and mentor a team of engineers",
+      "paraphrase": "being accountable for the output and growth of other engineers",
+      "expected": "gap",
+      "rationale": "All roles are individual-contributor internships; no leadership or mentoring."
+    },
+    {
+      "name": "Time series forecasting",
+      "category": "technical",
+      "necessity": "preferred",
+      "source_text": "Time series forecasting experience preferred",
+      "paraphrase": "predicting future values from historically ordered observations",
+      "expected": "gap",
+      "rationale": "Classification and dashboards appear; nothing temporal or predictive over time."
+    },
+    {
+      "name": "Requirements gathering",
+      "category": "soft",
+      "necessity": "required",
+      "source_text": "Gather requirements directly from clients",
+      "paraphrase": "eliciting what a customer actually needs before building",
+      "expected": "gap",
+      "rationale": "No client-facing discovery work anywhere on the resume."
+    }
+  ]
+}

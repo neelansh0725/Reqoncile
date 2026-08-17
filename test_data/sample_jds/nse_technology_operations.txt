@@ -1,0 +1,78 @@
+National Stock Exchange Limited
+Technology Job Description
+
+Who we are
+A homegrown brand with a global vision, NSE is counted as one of the world's
+largest exchanges and a catalyst for driving India's economic growth. NSE was
+the first exchange in India to implement electronic or screen-based trading
+which began its operations in 1994; a pioneer in technology which ensures
+the reliability and performance of its systems through a culture of
+innovation and investment in technology.
+
+Role: Technology Operations
+Location: Chennai
+
+You will be responsible for
+Performing Application IT Operations as per defined operational processes
+and tools.
+
+Knowledge Management:
+- Read technology documentation to understand scope of work (SOW).
+- Awareness of application being handled, its key components and business
+  flows.
+- Support scope and actions to be performed during Production releases,
+  mock drills, DR drills and LIVE sessions.
+
+Monitoring and Event Management:
+- Perform monitoring and checklists of Production environment comprising of
+  Linux/Windows based applications.
+- Identify and Review system Events/Alerts to be covered for monitoring.
+
+Incident and Problem Management:
+- Production Incident troubleshooting -- Escalate and resolve.
+- Perform incident analysis as part of operational efficiency.
+- Identify repetitive Incidents - Create and assign Problem Tickets to L3
+  teams.
+
+Service Request Management:
+- Fulfil end user requests received via Ticketing Tool.
+- Timely closure and/or escalation of service requests.
+
+Change Management:
+- Provide operations signoff to Development Team as part of Application
+  releases/changes.
+- Perform production changes basis guidelines & SOP documents received from
+  Development team.
+- Monitor change wrt Success and Failure -- Escalate and perform revert of
+  Production changes as per SOP document.
+- Create & review of release scripts/utilities for operational efficiency.
+
+Stakeholder Communication:
+- Follow established escalation matrix and procedures.
+- Conduct periodic service review call with all internal & external teams
+  comprising of technology, business and/or partner teams.
+
+Security and Compliance:
+- Strict adherence to Organization's Security and Compliance guidelines.
+- Keep updated of the changes to policies and procedures.
+
+Skill Set Required
+- Knowledge of Linux based OS concepts, IPC, Linux commands, Java/C,
+  Scripting, SQL/PLSQL, RDBMS and code release methodologies.
+- Knowledge of client server and Java based 3 tier applications in
+  Linux/Windows.
+- Knowledge of complete software development cycle, Maintenance and
+  Operations.
+- Knowledge of latest Java technologies/framework, AWS, Cloud Computing etc.
+- Expertise in application monitoring concepts and Tools.
+- ITIL process understanding.
+- Knowledge of various automation tool (ITRS, ServiceNow, Control M etc).
+
+What we have to offer you
+- A Dynamic and Inspiring work environment.
+- Collaborative and inclusive work culture that values Diversity,
+  Innovation, and Continuous learning.
+- Ample opportunities to work on challenging projects for professional
+  growth and advancement.
+- Support for professional development.
+- Many more Employee Benefits and Perks.

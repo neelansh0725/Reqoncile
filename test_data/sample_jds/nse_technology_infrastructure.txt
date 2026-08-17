@@ -1,0 +1,53 @@
+National Stock Exchange Limited
+Technology Job Description
+
+Who we are
+A homegrown brand with a global vision, NSE is counted as one of the world's
+largest exchanges and a catalyst for driving India's economic growth. NSE was
+the first exchange in India to implement electronic or screen-based trading
+which began its operations in 1994; a pioneer in technology which ensures
+the reliability and performance of its systems through a culture of
+innovation and investment in technology.
+
+Role: Technology Infrastructure
+Location: Chennai
+
+Responsibilities:
+- Support data centre operations, including server monitoring, hardware
+  checks, and incident coordination.
+- Assist in monitoring IT infrastructure tools and generating operational
+  reports.
+- Support automation initiatives using scripting and workflow tools to
+  improve operational efficiency.
+- Work with cross-functional teams to ensure smooth IT service delivery.
+- Managing Day to Day Network Operations (Daily checklist, monitoring of
+  devices and links for availability/performance, user access management,
+  troubleshooting & resolving user issues, managing user).
+- Solving queries, signature updates, configuration backups & validating
+  reports.
+- Plan, design, build and implement network passive and active
+  infrastructure based on business requirements.
+- Provide L1/L2 support for all network infrastructure deployed.
+- Respond, troubleshoot, identify root cause and remediate issues in timely
+  manner.
+- Preparing plan of action for changes and requirements.
+
+Desired Skills:
+- Basic understanding of Windows/Linux operating systems, networking, and
+  hardware.
+- Familiarity with IT infrastructure concepts, data centers, and cloud
+  fundamentals.
+- Knowledge of scripting (PowerShell, Python, or Shell) is an added
+  advantage.
+- Strong analytical, troubleshooting, and communication skills.
+- Willingness to learn new technologies and work in a fast-paced
+  environment.
+
+What we have to offer you
+- A Dynamic and Inspiring work environment.
+- Collaborative and inclusive work culture that values Diversity,
+  Innovation, and Continuous learning.
+- Ample opportunities to work on challenging projects for professional
+  growth and advancement.
+- Support for professional development.
+- Many more Employee Benefits and Perks.

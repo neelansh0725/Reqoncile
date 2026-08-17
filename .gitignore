@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Personal data. The resume is real: it carries a phone number and an email
+# address, and this repo is intended to be public. JDs stay tracked (they are
+# public postings); the resume does not. See test_data/resumes/README.md.
+test_data/resumes/*.pdf
+test_data/resumes/*.expected.txt
+test_data/resumes/*.review.md
+!test_data/resumes/README.md
+
+# Secrets — never commit real credentials.
+.env
+.env.*
+!.env.example
+
+# Local data / artifacts
+.chroma/
+logs/*.jsonl
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+
+# Frontend build output

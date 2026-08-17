@@ -1,0 +1,229 @@
+/**
+ * Report views (T063-T066).
+ *
+ * The honesty constraints the pipeline enforces have to survive into the UI,
+ * or the report quietly starts over-claiming at the last step:
+ *
+ *  - Gaps are shown plainly, with no rewrite offered (FR12).
+ *  - Eligibility is a separate checklist, never labelled Matched/Weak/Gap and
+ *    never scored (T015a) -- the system did not assess these.
+ *  - Errored requirements are shown as unassessed, not folded into gaps.
+ *  - Every rewrite shows the original line beside it (FR11), and a flagged
+ *    rewrite is visibly flagged rather than silently offered.
+ */
+import { useState } from "react";
+import { fetchTrace } from "./api";
+
+const LABELS = {
+  matched: { title: "Matched", tone: "ok", blurb: "Your resume clearly evidences these." },
+  weak: { title: "Under-communicated", tone: "warn", blurb: "The experience is there, but a reader scanning for these could miss it." },
+  gap: { title: "Gaps", tone: "bad", blurb: "Your resume does not evidence these. Stated plainly — no rewrite is offered, because there is nothing to surface." },
+};
+
+export function ScoreHeader({ report }) {
+  const meaningful = report.score_is_meaningful;
+  return (
+    <header className="score">
+      <div className={`score-dial ${meaningful ? "" : "muted"}`}>
+        <span className="score-value">{meaningful ? `${Math.round(report.score)}%` : "—"}</span>
+        <span className="score-label">match</span>
+      </div>
+      <div className="score-detail">
+        <p className="score-explanation">{report.score_explanation}</p>
+        {report.summary && <p className="summary">{report.summary}</p>}
+        {report.warnings?.length > 0 && (
+          <ul className="warnings">
+            {report.warnings.map((w, i) => <li key={i}>{w}</li>)}
+          </ul>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function RequirementGroup({ label, items, runId }) {
+  const meta = LABELS[label];
+  return (
+    <section className={`group tone-${meta.tone}`}>
+      <h3>{meta.title} <span className="count">{items.length}</span></h3>
+      {items.length === 0 ? (
+        <p className="empty">None.</p>
+      ) : (
+        <>
+          <p className="blurb">{meta.blurb}</p>
+          <ul className="requirements">
+            {items.map((c, i) => (
+              <RequirementRow key={`${c.requirement.name}-${i}`} c={c} runId={runId} />
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}
+
+/** One requirement, with its reasoning trace on demand (FR16). */
+function RequirementRow({ c, runId }) {
+  const [trace, setTrace] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function toggle() {
+    if (open) return setOpen(false);
+    setOpen(true);
+    if (trace || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const data = await fetchTrace(runId);
+      const step = data.steps.find((s) => s.requirement === c.requirement.name);
+      setTrace(step ?? { retrieved: [], justification: c.justification });
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <li className="requirement">
+      <div className="requirement-head">
+        <strong>{c.requirement.name}</strong>
+        <span className="tags">
+          <span className={`tag ${c.requirement.necessity}`}>{c.requirement.necessity}</span>
+          <span className="tag">{c.requirement.category}</span>
+        </span>
+        <button className="link" onClick={toggle} aria-expanded={open}>
+          {open ? "hide reasoning" : "why?"}
+        </button>
+      </div>
+      <p className="justification">{c.justification}</p>
+
+      {open && (
+        <div className="trace">
+          {busy && <p className="muted">Loading reasoning…</p>}
+          {error && <p className="error-inline">Could not load the trace: {error}</p>}
+          {trace && (
+            <>
+              <p className="trace-head">
+                Retrieved {trace.retrieved?.length ?? 0} resume excerpt(s), then judged:
+              </p>
+              <ol className="excerpts">
+                {(trace.retrieved ?? []).map((r) => (
+                  <li key={r.chunk_id} className={c.evidence_chunk_ids?.includes(r.chunk_id) ? "cited" : ""}>
+                    <code>{r.chunk_id}</code>
+                    <span className="muted">
+                      {" "}{r.section} · line {r.source_line_no} ·{" "}
+                      {r.similarity > 0 ? `similarity ${r.similarity.toFixed(3)}` : "keyword match"}
+                    </span>
+                    <p>{r.text}</p>
+                  </li>
+                ))}
+              </ol>
+              {trace.rejected_evidence?.length > 0 && (
+                <p className="error-inline">
+                  Rejected {trace.rejected_evidence.length} citation(s) the model invented:{" "}
+                  {trace.rejected_evidence.join(", ")}
+                </p>
+              )}
+              {trace.repaired && <p className="error-inline">{trace.repaired}</p>}
+            </>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
+export function RequirementSections({ report }) {
+  const byLabel = (l) => report.classifications.filter((c) => c.label === l);
+  return (
+    <>
+      {["matched", "weak", "gap"].map((l) => (
+        <RequirementGroup key={l} label={l} items={byLabel(l)} runId={report.run_id} />
+      ))}
+    </>
+  );
+}
+
+/** FR11: the original line is always shown beside the suggestion. */
+export function Rewrites({ rewrites }) {
+  if (!rewrites?.length) return null;
+  return (
+    <section className="group tone-warn">
+      <h3>Suggested rewrites <span className="count">{rewrites.length}</span></h3>
+      <p className="blurb">
+        Each suggestion uses only what the original line already says, and shows the
+        line it came from.
+      </p>
+      {rewrites.map((r, i) => (
+        <article key={i} className={`rewrite ${r.grounding_flags?.length ? "flagged" : ""}`}>
+          <h4>{r.requirement.name}</h4>
+          <div className="rewrite-pair">
+            <div>
+              <span className="rewrite-label">Current <code>{r.source_chunk_id}</code></span>
+              <blockquote className="original">{r.original_text}</blockquote>
+            </div>
+            <div>
+              <span className="rewrite-label">Suggested</span>
+              <blockquote className="suggested">{r.suggested_text}</blockquote>
+            </div>
+          </div>
+          <p className="rationale">{r.rationale}</p>
+          {r.grounding_flags?.length > 0 && (
+            <div className="flags">
+              <strong>Review before using —</strong> this suggestion may add something the
+              original does not support:
+              <ul>{r.grounding_flags.map((f, j) => <li key={j}>{f}</li>)}</ul>
+            </div>
+          )}
+        </article>
+      ))}
+    </section>
+  );
+}
+
+/** T015a: never scored, never labelled — for the candidate to confirm. */
+export function EligibilityChecklist({ items }) {
+  if (!items?.length) return null;
+  return (
+    <section className="group tone-neutral">
+      <h3>Eligibility checklist <span className="count">{items.length}</span></h3>
+      <p className="blurb">
+        These were <strong>not assessed</strong>. A resume cannot reliably evidence work
+        authorisation, location or graduation year, so they are listed for you to confirm
+        rather than guessed at — and they do not affect the score.
+      </p>
+      <ul className="checklist">
+        {items.map((r, i) => (
+          <li key={i}>
+            <label><input type="checkbox" /> <strong>{r.name}</strong></label>
+            <span className="muted"> — {r.source_text}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function ErroredList({ items }) {
+  if (!items?.length) return null;
+  return (
+    <section className="group tone-neutral">
+      <h3>Could not assess <span className="count">{items.length}</span></h3>
+      <p className="blurb">
+        These failed during analysis. They are listed rather than counted as gaps — the
+        system did not assess them, so it makes no claim either way.
+      </p>
+      <ul className="requirements">
+        {items.map((c, i) => (
+          <li key={i} className="requirement">
+            <strong>{c.requirement.name}</strong>
+            <p className="justification muted">{c.error}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

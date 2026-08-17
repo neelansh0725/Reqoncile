@@ -1,0 +1,68 @@
+  []
+
+We are hiring!
+
+  Founded by alumni from IIT and ISB, Osfin.ai stands at the forefront
+  as an emerging global B2B SaaS firm. Our core mission is to fully
+  automate the intricate financial operations that enterprises grapple
+  with daily. In this journey, we’ve collaborated with a diverse
+  clientele, encompassing global banks, premier fintechs, leading
+  e-commerce, and the next generation of unicorns. With our innovative
+  solutions we’ve successfully transformed our customers' cumbersome
+  FinOps processes, helping our customers attain operational and
+  commercial excellence.
+
+Who is an ideal fit for us?
+
+  We seek professionals who are analytical, demonstrate self-motivation,
+  exhibit a proactive mindset, and possess a strong sense of
+  responsibility and ownership in their work.
+
+What will you get to work on?
+
+  As a core member of the Implementation team, you will:
+
+-   Work with the core team in implementing the product for the end
+    customers
+
+-   Development of a holistic implementation roadmap for smooth goals
+    delivery
+
+-   Complex implementations projects across diverse use cases across the
+    industries
+
+-   Provide key inputs for the development of a globally scalable SaaS
+    product
+
+What do we expect from you?
+
+  For the Implementation Engineer role, we are seeking candidates with
+  the following skills and expertise:
+
+-   Proficiency in SQL and MS Excel
+
+-   Strong communication skills, allowing for seamless interactions with
+    customers to understand their requirements thoroughly
+
+-   Capable of working independently with minimal guidance, showcasing
+    self-reliance and initiative
+
+-   Previous experience in working on automation projects, bringing
+    valuable insights and efficiencies to the processes
+
+Why join us?
+
+  Discover unparalleled professional and financial growth by joining our
+  dynamic team, where we offer:
+
+-   A remarkable team of industry experts with a proven track record for
+    driving impact
+
+-   Competitive compensation packages and a generous Employee Stock
+    Ownership Plan
+
+-   Opportunities to work with leading customers across diverse
+    industries
+
+-   An engaging and enjoyable work environment that fosters
+    collaboration and innovation

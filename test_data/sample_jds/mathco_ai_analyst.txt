@@ -1,0 +1,90 @@
+MathCo Challengers Hiring Program
+Where Great Minds Solve High-Impact Problems
+
+Designation: AI - Analyst
+Office Location: MathCo, 8th Floor, Tower A, IWF Campus, Whitefield Main Rd,
+B Narayanapura, Mahadevapura, Bengaluru, Karnataka, India - 560048.
+
+Why MathCo?
+MathCo is a global Enterprise AI and Analytics company trusted by Fortune
+500 and Global 2000 leaders to make high-stakes, data-driven decisions.
+Founded in 2016, we build custom AI and advanced analytics solutions
+through an innovative hybrid model -- combining deep domain expertise with
+cutting-edge technology. At MathCo, we value capability and attitude over
+pedigree, and foster an open, barrier-free culture where every
+Mathemagician is empowered to Leave a Mark.
+
+What You'll Build -- After the Challengers Program
+Once you complete MathCo's onboarding program, you'll work on real,
+production-grade AI systems for global enterprises:
+- AI-powered enterprise applications.
+- Decision intelligence platforms.
+- End-to-end AI workflows and automation solutions.
+- Custom decision and AI systems at scale.
+- Agentic workflows and multi-step AI orchestration.
+- Client-facing AI solution prototypes and demo.
+
+Responsibilities:
+
+Business Problem Solving
+- Consult and liaise with clients and stakeholders to deeply understand
+  business problems and translate them into AI-solvable problem statements.
+- Define, decompose, and frame complex cross-domain challenges while
+  leveraging subject-matter experts.
+- Communicate findings, model outputs, and recommendations clearly to both
+  technical and non-technical audiences.
+
+AI-Native Execution
+- Build and deploy AI/ML models -- spanning Machine Learning, Deep
+  Learning, Neural Networks, NLP, Computer Vision, and Generative AI -- to
+  solve enterprise-grade problems.
+- Design and implement AI workflows, agentic pipelines, and multi-step AI
+  orchestration logic.
+- Continuously learn and gain proficiency in tools like Python, Spark,
+  TensorFlow, LangChain, and emerging AI frameworks.
+
+Building Enterprise-Level Applications
+- Develop scalable, production-ready AI systems and decision intelligence
+  platforms used by global Fortune 500 clients.
+- Contribute to the design and deployment of custom AI automation
+  solutions tailored to specific business contexts.
+- Collaborate with cross-functional teams -- data engineers, product
+  managers, and domain consultants -- to ship complete, integrated
+  solutions.
+
+Data & Engineering
+- Build and maintain robust data pipelines, ensuring data quality,
+  availability, and integrity for AI/ML workloads.
+- Apply strong analytical thinking and engineering rigour to data
+  wrangling, feature engineering, and model evaluation.
+- Gain expertise in AI/ML Design & Engineering -- from data ingestion
+  through model serving.
+
+Product Development & Consumption Enablement
+- Own end-to-end delivery of analytical solutions within a project -- from
+  problem framing to final deployment.
+- Increase last-mile adoption by building user-facing AI prototypes,
+  demos, and interfaces that make insights actionable.
+- Work closely with stakeholders to iterate on solutions based on
+  real-world feedback and ensure continued business impact.
+
+Cultural Alignment
+- Stay curious -- ask the question others don't.
+- Continuously upskill and get certified in new technologies, tools, and
+  algorithms.
+- Take ownership and drive results with an excellence-first mindset.
+- Understand and embody MathCo's collaborative, open way of working.
+- Actively contribute to initiatives that fuel company-wide growth.
+
+Preferred Educational Qualifications:
+Graduating class of 2027 -- B.E / B.Tech (any engineering stream).
+
+Hiring Process
+- Aptitude Test -- Online
+- Communication Test -- Online
+- Technical Interview -- In-person
+- Case Study -- In-person
+- Final Interview -- In-person
+
+Ready to drive impact and leave a mark? Apply now and start your AI journey
+with MathCo.
