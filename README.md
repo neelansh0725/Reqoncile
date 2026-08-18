@@ -294,6 +294,12 @@ suggestions to the resume moved **nothing** — measured, not assumed
 (`docs/version_diff.md`). To move such a requirement, the experience has to
 appear in a project or experience bullet.
 
+**There is no automated test suite.** `pytest` finds nothing to run. Every
+measurement in `docs/` is reproducible by re-running the script that produced
+it, and the honesty constraints are enforced by Pydantic validators that fail
+loudly, but nothing guards against regression on a future change. This is a
+legitimate criticism of the repository and is not defended.
+
 **Interview-prep questions are templated.** A "how do you stay current with…"
 question appeared in **6 of 6** gaps, and 15 of 18 answer-notes open with the
 same three words. Within a gap the questions differ; across gaps one slot is

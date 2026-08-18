@@ -96,9 +96,12 @@ model ignores `temperature`, so nothing here ever ran deterministically.
 ## Attempt 3 — SM6 met
 
 `v4` added a project the candidate actually built this season: **this
-repository**. Every claim in the entry is verifiable in the repo. This is the
-PRD's own SM5 scenario ("LangChain/RAG before Reqoncile itself existed") run
-forwards.
+repository**. This is the PRD's own SM5 scenario ("LangChain/RAG before
+Reqoncile itself existed") run forwards.
+
+The entry's claims are verifiable in the repo — **with one exception that was
+caught later and removed**, see the correction at the end of this document. It
+is worth reading that section before quoting this one.
 
 Run `run_20260818T153751_0f6923c5`, 815s:
 

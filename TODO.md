@@ -656,7 +656,7 @@ Legend: `Refs:` maps to PRD functional requirements / NFRs / risks / success met
   *Done when:* the script can be followed start to finish in one sitting.
   *Refs:* SM2, SM3, R2
 
-- [ ] **T092 — Final polish and tag v1.2**
+- [x] **T092 — Final polish and tag v1.2**
   *Done when:* the tag exists and the README covers all three added modes.
   *Note:* this task predates the ranking-measurement work, which already took
   the `v1.1` tag (that release narrowed the ranking claim to what the data
