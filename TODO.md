@@ -460,13 +460,13 @@ Legend: `Refs:` maps to PRD functional requirements / NFRs / risks / success met
   *Done when:* the defect list is cleared or each remaining item is explicitly deferred
   with a reason.
 
-- [ ] **T070 — Verify SM2 and SM3 on a demo run**
+- [x] **T070 — Verify SM2 and SM3 on a demo run**
   Confirm one run cleanly distinguishes a true Gap from a Weak Match, and that one
   rewrite is traceably grounded. Capture the screenshots.
   *Done when:* both are demonstrated and captured.
   *Refs:* SM2, SM3
 
-- [ ] **T071 — Write the README**
+- [x] **T071 — Write the README**
   What it does, architecture diagram, setup, run instructions, and the design
   decisions worth defending (LangChain choice, no-fabrication constraint, mixed-tier LLM use).
 
@@ -494,7 +494,7 @@ Legend: `Refs:` maps to PRD functional requirements / NFRs / risks / success met
 
   *Done when:* someone else could clone and run it from the README alone.
 
-- [ ] **T072 — Tag v1**
+- [x] **T072 — Tag v1**
   *Done when:* `v1.0` tag exists on a commit where the full single-JD flow works.
 
 > **Gate:** do not start Phase 9 until T072 is done. If time runs out here, ship v1
@@ -630,15 +630,26 @@ Legend: `Refs:` maps to PRD functional requirements / NFRs / risks / success met
 
 ## Phase 12 — Buffer & Demo Prep
 
-- [ ] **T089 — Re-run all three v1.1 features end to end**
+- [x] **T089 — Re-run all three v1.1 features end to end**
   *Done when:* comparison, interview prep, and diffing each work on real data after
   all changes.
+  *Status:* all three verified after the D6 stemmer fix. Comparison ran on 2 JDs
+  rather than 3, and the post-fix diff run from T088 was reused: the day had 69
+  of 500 hosted calls left and a full re-run needed ~98. Budgeting the day
+  rather than starting a sweep that dies halfway — the mistake that cost a
+  nine-JD run earlier in the project.
 
-- [ ] **T090 — Final latency and graceful-degradation check**
+- [x] **T090 — Final latency and graceful-degradation check**
   Re-time the core run and re-verify partial-failure behavior across all modes.
   *Done when:* NFR1 and NFR3 both hold on the final build.
+  *Status:* **NFR3 holds; NFR1 does not.** 2 of 23 runs came in under 30s, and
+  three 9-requirement runs took 54–57s, so the budget is unreliable even at the
+  smallest JD. Cause is the 15 req/min free-tier floor, not the code. The claim
+  was revised down rather than reworded. NFR3 verified per mode: every
+  degradation path reports the absence of a result rather than substituting a
+  plausible one.
 
-- [ ] **T091 — Write the demo narrative**
+- [x] **T091 — Write the demo narrative**
   `docs/demo.md`: the run order to show, the Gap-vs-Weak example that proves real
   reasoning, the traceable rewrite, and the fabrication-boundary test as the answer to
   "how do you know it isn't hallucinating?"

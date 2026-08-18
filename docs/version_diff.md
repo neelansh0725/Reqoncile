@@ -142,3 +142,30 @@ project lengthened the resume, producing more chunks and more retrieval work
 per requirement, and the run competed with free-tier pacing throughout. A diff
 is two full pipeline runs by construction, so **NFR1's ~30s budget does not
 apply to this mode and was never expected to** (`docs/latency.md`).
+
+---
+
+## A correction to this document's own test material
+
+The `v4` entry originally claimed the anti-fabrication constraints were
+"verified with a pytest suite plus 14 deliberately baited rewrite attempts."
+
+**There is no pytest suite in this repository.** Verification was real but
+ad-hoc: inline scripts under `scripts/` and one-off checks. The claim was
+written by the same process this project exists to catch, onto a resume
+version, and it is exactly the failure mode the grounding check (T044) targets
+— a plausible credential with nothing behind it. It has been removed; the entry
+now claims only the 14 baited attempts, which are documented in
+`docs/fabrication_test.md`.
+
+**Does this invalidate the SM6 result?** No. The requirement that moved was
+`Vector databases`, and the classifier cited the *retrieval* line — "implementing
+hybrid retrieval over a Chroma vector store in project work" — not the testing
+line. The moved verdict does not rest on the removed claim. The run was not
+repeated, because the day's hosted quota was nearly spent; that is a stated
+limitation of this correction rather than a silent one.
+
+**Worth naming as a real gap:** the project has no automated test suite. Every
+measurement in `docs/` is reproducible by re-running the script that produced
+it, but there is no `pytest` invocation that guards against regression. That is
+a legitimate criticism of the repository and is not defended here.

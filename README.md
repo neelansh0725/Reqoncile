@@ -307,10 +307,15 @@ scoring"* has no shared term for BM25 and is dominated by tool names for the
 embedding. The link is inferential; neither retriever bridges it
 (`docs/classifier_eval.md`).
 
-**NFR1's ~30s budget holds only for a demo-length JD on a warm process.** The
-free tier allows 15 requests/minute and classification is one call per
-requirement, so a 50-requirement JD takes minutes by arithmetic
-(`docs/latency.md`).
+**NFR1's ~30s budget does not hold.** Measured across 23 runs, **2 came in
+under 30s** — and three *other* 9-requirement runs took 54–57s, so the budget is
+unreliable even at the smallest JD in the set. The free tier allows 15
+requests/minute against one call per requirement, which puts a hard floor of
+~60s on anything past 15 requirements. Realistic figures: **15–60s for 9–15
+requirements, 60–90s to 24, minutes beyond.** Diff mode is two full pipelines by
+construction — budget 5–15 minutes. Meeting NFR1 would mean batching
+requirements per call, which costs the per-requirement error isolation and the
+reasoning trace; that trade has not been made (`docs/latency.md`).
 
 ---
 
