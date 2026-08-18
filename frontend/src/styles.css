@@ -213,3 +213,48 @@ button.link {
 .comparison .lede { max-width: 46rem; }
 .comparison .caveat { margin-top: 1.2rem; font-size: .85rem; }
 .unranked, .comparison .warnings { margin-top: 1.3rem; }
+
+/* --- Interview prep (T082) ---------------------------------------------- */
+
+.prep { margin-top: 2rem; border-top: 1px solid var(--line); padding-top: 1.2rem; }
+.prep > .muted { max-width: 46rem; }
+.prep-gap {
+  border: 1px solid var(--line); border-left: 3px solid var(--bad);
+  border-radius: var(--radius); padding: .8rem 1rem; margin: .9rem 0;
+  background: var(--panel);
+}
+.prep-gap h3 { margin: 0 0 .5rem; font-size: 1rem; }
+.prep-questions { margin: 0; padding-left: 1.2rem; }
+.prep-questions li { margin-bottom: .9rem; }
+.prep-q { margin: 0 0 .3rem; font-weight: 600; }
+.prep-a { margin: 0; color: var(--muted); }
+.prep-declined { margin: 0; color: var(--warn); }
+.error-inline { color: var(--bad); background: var(--bad-bg); padding: .5rem .7rem; border-radius: 6px; }
+
+/* --- Version diff (T087) ------------------------------------------------- */
+
+.diff-summary {
+  font-size: 1.05rem; font-weight: 600; padding: .7rem .9rem;
+  border-radius: var(--radius); background: var(--panel);
+  border: 1px solid var(--line); border-left: 3px solid var(--accent);
+}
+.diff-group { margin-top: 1.4rem; }
+.diff-group h3 { margin: 0 0 .2rem; font-size: 1rem; }
+.diff-group.up h3 { color: var(--ok); }
+.diff-group.down h3 { color: var(--bad); }
+.diff-group.unknown h3 { color: var(--warn); }
+.diff-list { list-style: none; padding: 0; margin: .6rem 0 0; }
+.diff-list li {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 1rem; padding: .45rem .6rem; border-bottom: 1px solid var(--line);
+}
+.diff-req { font-weight: 500; }
+.diff-move { display: flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.chip {
+  font-size: .78rem; padding: .12rem .45rem; border-radius: 999px;
+  border: 1px solid var(--line); text-transform: lowercase;
+}
+.chip.matched { background: var(--ok-bg); color: var(--ok); }
+.chip.weak    { background: var(--warn-bg); color: var(--warn); }
+.chip.gap     { background: var(--bad-bg); color: var(--bad); }
+.chip.errored { background: var(--bg); color: var(--muted); }

@@ -1,9 +1,9 @@
 /** Reqoncile UI (T061-T062, FR15). */
 import { useEffect, useRef, useState } from "react";
-import { analyze, compare, health, uploadResume } from "./api";
+import { analyze, compare, diffVersions, health, interviewPrep, uploadResume } from "./api";
 import {
-  ComparisonView, EligibilityChecklist, ErroredList, RequirementSections, Rewrites,
-  ScoreHeader,
+  ComparisonView, EligibilityChecklist, ErroredList, InterviewPrepPanel,
+  RequirementSections, Rewrites, ScoreHeader, VersionDiffView,
 } from "./components";
 
 export default function App() {
@@ -21,6 +21,11 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [service, setService] = useState(null);
   const [elapsed, setElapsed] = useState(0);
+  // Diff mode keeps its own second resume so switching modes preserves input.
+  const [resumeAfter, setResumeAfter] = useState("");
+  const [prep, setPrep] = useState(null);
+  const [prepStatus, setPrepStatus] = useState("idle");
+  const [prepError, setPrepError] = useState(null);
   const fileInput = useRef(null);
 
   useEffect(() => {
@@ -60,12 +65,43 @@ export default function App() {
     setStatus("running");
     setError(null);
     setResult(null);
+    setPrep(null);
+    setPrepStatus("idle");
+    setPrepError(null);
     try {
       setResult(await analyze({ jdText, resumeText }));
       setStatus("done");
     } catch (e) {
       setError(e.message);
       setStatus("error");
+    }
+  }
+
+  async function onDiff(event) {
+    event.preventDefault();
+    setStatus("running");
+    setError(null);
+    setResult(null);
+    try {
+      setResult(await diffVersions({
+        jdText, resumeBefore: resumeText, resumeAfter,
+      }));
+      setStatus("done");
+    } catch (e) {
+      setError(e.message);
+      setStatus("error");
+    }
+  }
+
+  async function onPrepare() {
+    setPrepStatus("preparing");
+    setPrepError(null);
+    try {
+      setPrep(await interviewPrep(result.report.run_id));
+      setPrepStatus("done");
+    } catch (e) {
+      setPrepError(e.message);
+      setPrepStatus("error");
     }
   }
 
@@ -87,8 +123,10 @@ export default function App() {
     setJds((current) => current.map((jd, i) => (i === index ? { ...jd, ...patch } : jd)));
   }
 
-  const filledJds = jds.filter((jd) => jd.text.trim() && jd.label.trim());
   const busy = status === "running" || status === "uploading";
+  const canDiff = jdText.trim() && resumeText.trim() && resumeAfter.trim()
+    && resumeText.trim() !== resumeAfter.trim() && !busy;
+  const filledJds = jds.filter((jd) => jd.text.trim() && jd.label.trim());
   const canCompare = filledJds.length >= 2 && resumeText.trim() && !busy;
   const canRun = jdText.trim() && resumeText.trim() && status !== "running" && status !== "uploading";
   const report = result?.report;
@@ -124,9 +162,16 @@ export default function App() {
         >
           Compare up to 3
         </button>
+        <button
+          type="button" role="tab" aria-selected={mode === "diff"}
+          className={mode === "diff" ? "mode on" : "mode"}
+          onClick={() => { setMode("diff"); setResult(null); setStatus("idle"); }}
+        >
+          Compare two resume drafts
+        </button>
       </nav>
 
-      <form className="inputs" onSubmit={mode === "compare" ? onCompare : onAnalyze}>
+      <form className="inputs" onSubmit={mode === "compare" ? onCompare : mode === "diff" ? onDiff : onAnalyze}>
         {mode === "analyse" ? (
           <div className="field">
             <label htmlFor="jd">Job description</label>
@@ -195,11 +240,30 @@ export default function App() {
           {service?.lastUpload && <span className="hint muted">Extracted from {service.lastUpload} — check it before analysing.</span>}
         </div>
 
+        {mode === "diff" && (
+          <div className="field">
+            <label htmlFor="resume-after">Your revised resume</label>
+            <textarea
+              id="resume-after" value={resumeAfter} rows={14} spellCheck={false}
+              placeholder="Paste the newer version…"
+              onChange={(e) => setResumeAfter(e.target.value)}
+            />
+            <span className="hint muted">
+              The job description is parsed once and the same requirements are used for both
+              versions — otherwise extraction noise would look like progress.
+            </span>
+          </div>
+        )}
+
         <div className="actions">
-          <button type="submit" disabled={mode === "compare" ? !canCompare : !canRun}>
+          <button
+            type="submit"
+            disabled={mode === "compare" ? !canCompare : mode === "diff" ? !canDiff : !canRun}
+          >
             {status === "running"
-              ? `${mode === "compare" ? "Comparing" : "Analysing"}… ${elapsed}s`
-              : mode === "compare" ? `Compare ${filledJds.length || ""} jobs`.trim() : "Analyse"}
+              ? `${{ compare: "Comparing", diff: "Diffing" }[mode] ?? "Analysing"}… ${elapsed}s`
+              : mode === "compare" ? `Compare ${filledJds.length || ""} jobs`.trim()
+              : mode === "diff" ? "Compare drafts" : "Analyse"}
           </button>
           {status === "running" && (
             <span className="hint muted">
@@ -227,6 +291,16 @@ export default function App() {
         </>
       )}
 
+      {mode === "diff" && result?.diff && (
+        <>
+          <VersionDiffView diff={result.diff} />
+          <details className="raw">
+            <summary>Full diff as Markdown</summary>
+            <pre>{result.markdown}</pre>
+          </details>
+        </>
+      )}
+
       {mode === "analyse" && report && (
         <main className="report">
           <ScoreHeader report={report} />
@@ -238,6 +312,10 @@ export default function App() {
           <Rewrites rewrites={report.rewrites} />
           <EligibilityChecklist items={report.eligibility} />
           <ErroredList items={report.errored} />
+          <InterviewPrepPanel
+            report={report} onPrepare={onPrepare} prep={prep}
+            status={prepStatus} error={prepError}
+          />
           <details className="raw">
             <summary>Full report as Markdown</summary>
             <pre>{result.markdown}</pre>

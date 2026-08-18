@@ -25,20 +25,26 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi import Path as FastPath
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from llm_client import LLMConfigurationError
 from logging_utils import RUN_ID_PATTERN, is_valid_run_id, read_run
 from parsing.resume_parser import ResumeParseError, load_resume_text
 from pipeline import run_pipeline
 from agent.comparator import MAX_JDS, compare_jds
+from agent.differ import diff_resume_versions, render_diff_markdown
 from agent.interview_prep import load_gaps_from_run, prepare_for_gaps
 from reporting.generate_report import (
     render_comparison_markdown,
     render_markdown,
 )
 from retrieval.embed import EmbeddingError, get_embedding_model
-from schemas import AlignmentReport, ComparisonResult, InterviewPrep
+from schemas import (
+    AlignmentReport,
+    ComparisonResult,
+    InterviewPrep,
+    VersionDiff,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -331,6 +337,67 @@ def trace(
         for payload in [event.get("payload", {})]
     ]
     return TraceResponse(run_id=run_id, steps=steps)
+
+
+class DiffRequest(BaseModel):
+    """One JD, two resume versions (FR24).
+
+    The JD is parsed once and shared across both runs -- see
+    `diff_resume_versions` for why that is load-bearing rather than an
+    optimisation.
+    """
+
+    jd_text: str = Field(..., min_length=1, max_length=MAX_JD_CHARS)
+    resume_before: str = Field(..., min_length=1, max_length=MAX_RESUME_CHARS)
+    resume_after: str = Field(..., min_length=1, max_length=MAX_RESUME_CHARS)
+
+    @field_validator("jd_text", "resume_before", "resume_after")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("must not be blank")
+        return value
+
+    @model_validator(mode="after")
+    def _versions_differ(self) -> "DiffRequest":
+        if self.resume_before.strip() == self.resume_after.strip():
+            raise ValueError(
+                "the two resume versions are identical; there is nothing to diff"
+            )
+        return self
+
+
+class DiffResponse(BaseModel):
+    diff: VersionDiff
+    before: AlignmentReport
+    after: AlignmentReport
+    markdown: str
+    total_seconds: float
+
+
+@app.post("/diff", response_model=DiffResponse)
+def diff_versions(request: DiffRequest) -> DiffResponse:
+    """Diff two resume versions against one JD (FR24-FR27)."""
+    started = time.time()
+    try:
+        diff, before, after = diff_resume_versions(
+            request.jd_text, request.resume_before, request.resume_after
+        )
+    except LLMConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ResumeParseError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("diff failed")
+        raise HTTPException(status_code=500, detail=f"diff failed: {exc}") from exc
+
+    return DiffResponse(
+        diff=diff, before=before, after=after,
+        markdown=render_diff_markdown(diff),
+        total_seconds=time.time() - started,
+    )
 
 
 class InterviewPrepResponse(BaseModel):

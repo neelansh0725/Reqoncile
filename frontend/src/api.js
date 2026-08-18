@@ -71,6 +71,24 @@ export const compare = ({ jds, resumeText, includeRewrites = false }) =>
     }),
   });
 
+/** Interview questions for a completed run's gaps (FR21-FR23). */
+export const interviewPrep = (runId, limit = 5) =>
+  request(`/interview-prep/${encodeURIComponent(runId)}?limit=${limit}`, {
+    method: "POST",
+  });
+
+/** Diff two resume versions against one JD (FR24-FR27). */
+export const diffVersions = ({ jdText, resumeBefore, resumeAfter }) =>
+  request("/diff", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jd_text: jdText,
+      resume_before: resumeBefore,
+      resume_after: resumeAfter,
+    }),
+  });
+
 export const uploadResume = (file) => {
   const form = new FormData();
   form.append("file", file);

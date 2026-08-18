@@ -60,6 +60,15 @@ Two traps worth knowing:
    resolves to a Flash model, not a Pro one. Newer is not automatically
    better: 3.7-flash was ~4.5× slower than 3.5-flash and less reliable.
 
+> **Correction (D7).** The warning below applies to the model this project
+> actually runs. `gemini-3.5-flash-lite` **also ignores `temperature`** — the
+> library emits "uses fixed sampling defaults; the sampling parameter(s)
+> temperature will be ignored" on every call. It is chosen for its 500/day
+> quota, since every model that honours `temperature` has a daily cap too
+> small to run one JD. The advice below to "prefer models that honour
+> `temperature=0.0`" **cannot be followed on the free tier.** Treat every
+> measurement in this project as one sample from a distribution.
+
 `gemini-3.6-flash` ignoring `temperature` matters beyond speed: the classifier
 eval (T036) assumes repeated runs on identical input agree. A model sampling
 at fixed defaults makes that comparison noisy. Prefer models that honour

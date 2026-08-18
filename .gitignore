@@ -32,3 +32,4 @@ frontend/dist/
 # Frontend build output
 .claude/
 .playwright/
+test_data/resumes/versions/

@@ -306,3 +306,132 @@ export function ComparisonView({ result, labels }) {
     </main>
   );
 }
+
+
+/**
+ * Interview prep for gaps (T082, FR21-FR23).
+ *
+ * Renders notes as *notes* -- what an honest answer must cover -- and says so
+ * on the page. The schema already refuses to produce a sample answer; the UI
+ * should not imply one is on offer either.
+ */
+export function InterviewPrepPanel({ report, onPrepare, prep, status, error }) {
+  const gapCount = report.gaps.length;
+  if (gapCount === 0) return null;
+
+  return (
+    <section className="prep">
+      <h2>Prepare for the gaps</h2>
+      <p className="muted">
+        Questions an interviewer could ask about each gap, and what an honest answer would
+        need to cover. These are notes to think with — deliberately not answers to memorise.
+      </p>
+
+      {!prep && (
+        <button type="button" onClick={onPrepare} disabled={status === "preparing"}>
+          {status === "preparing"
+            ? "Generating…"
+            : `Prepare for ${Math.min(gapCount, 5)} gap${gapCount === 1 ? "" : "s"}`}
+        </button>
+      )}
+      {status === "preparing" && (
+        <p className="hint muted">
+          Runs on the local model — roughly 20 seconds per gap, and the first call also
+          waits for the model to load.
+        </p>
+      )}
+      {error && <p className="error-inline">{error}</p>}
+
+      {prep?.prep?.prepared?.map((record) => (
+        <article className="prep-gap" key={record.requirement}>
+          <h3>{record.requirement}</h3>
+          {record.error ? (
+            <p className="prep-declined">
+              No questions generated for this gap. The draft was rejected rather than
+              shown — usually because it drifted into writing an answer for you.
+            </p>
+          ) : (
+            <ol className="prep-questions">
+              {record.questions.map((q, i) => (
+                <li key={i}>
+                  <p className="prep-q">{q.question}</p>
+                  <p className="prep-a">
+                    <strong>An honest answer covers:</strong> {q.answer_should_cover}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          )}
+        </article>
+      ))}
+
+      {prep?.gaps_found > (prep?.prep?.prepared?.length ?? 0) && (
+        <p className="hint muted">
+          Showing {prep.prep.prepared.length} of {prep.gaps_found} gaps.
+        </p>
+      )}
+    </section>
+  );
+}
+
+
+const DIRECTION_META = {
+  improved: { label: "Stronger", tone: "up", blurb: "These moved up between versions." },
+  regressed: { label: "Weaker", tone: "down",
+    blurb: "These moved down. Worth checking whether an edit removed something the earlier version was evidencing." },
+  indeterminate: { label: "Not comparable", tone: "unknown",
+    blurb: "One version failed to classify these, so no movement can be claimed either way." },
+  unchanged: { label: "Unchanged", tone: "same", blurb: "Same verdict in both versions." },
+};
+
+/**
+ * Version diff (T087, FR26-FR27).
+ *
+ * The net-improvement line leads, because that is the one thing FR27 asks be
+ * readable at a glance. Indeterminate changes get their own group rather than
+ * being folded into "unchanged" — no movement observed is not the same fact
+ * as no movement.
+ */
+export function VersionDiffView({ diff }) {
+  const groups = ["improved", "regressed", "indeterminate", "unchanged"];
+  const byDirection = Object.fromEntries(
+    groups.map((g) => [g, diff.changes.filter((c) => c.direction === g)]),
+  );
+
+  return (
+    <main className="report diffview">
+      <h2>What changed between versions</h2>
+      <p className="diff-summary">{diff.summary}</p>
+
+      {diff.warnings?.length > 0 && (
+        <div className="warnings">
+          <ul>{diff.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+        </div>
+      )}
+
+      {groups.map((g) => {
+        const items = byDirection[g];
+        if (!items.length) return null;
+        const meta = DIRECTION_META[g];
+        return (
+          <section key={g} className={`diff-group ${meta.tone}`}>
+            <h3>{meta.label} ({items.length})</h3>
+            <p className="muted">{meta.blurb}</p>
+            <ul className="diff-list">
+              {items.map((c) => (
+                <li key={c.requirement}>
+                  <span className="diff-req">{c.requirement}</span>
+                  <span className="diff-move">
+                    <span className={`chip ${c.before}`}>{c.before}</span>
+                    <span aria-hidden="true"> → </span>
+                    <span className={`chip ${c.after}`}>{c.after}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </main>
+  );
+}

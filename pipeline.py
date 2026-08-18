@@ -27,6 +27,7 @@ from agent.classifier import classify_requirements
 from agent.rewriter import suggest_rewrites
 from logging_utils import log_event, new_run_id
 from parsing.jd_parser import parse_jd
+from schemas import ParsedJD
 from parsing.resume_parser import chunk_resume, load_resume_text
 from reporting.generate_report import assemble_report, summarise
 from retrieval.vector_store import index_resume
@@ -59,11 +60,19 @@ def run_pipeline(
     run_id: str | None = None,
     skip_rewrites: bool = False,
     skip_summary: bool = False,
+    parsed: "ParsedJD | None" = None,
 ) -> tuple[AlignmentReport, StageTimings]:
     """Run JD + resume to a finished report (FR13).
 
     Returns the report and per-stage timings. Timings are returned rather than
     logged only, because NFR1 is a budget someone has to be able to check.
+
+    `parsed` supplies an already-extracted JD and skips the parse. Version
+    diffing needs this: extraction is not reproducible (D3/D4), so parsing the
+    same JD twice would yield differently-named requirements and a diff of two
+    such runs would compare things that are not the same requirement. Sharing
+    one parse pins the requirement set, which is what makes the diff mean
+    anything. It also pins the denominator, so a score delta is real.
     """
     run_id = run_id or new_run_id()
     timings = StageTimings()
@@ -71,9 +80,13 @@ def run_pipeline(
               {"jd": str(jd_source)[:200], "resume": str(resume_source)[:200]})
 
     # --- JD parsing -------------------------------------------------------
-    started = time.time()
-    parsed = parse_jd(jd_source, run_id=run_id)
-    timings.record("jd_parse", time.time() - started)
+    if parsed is None:
+        started = time.time()
+        parsed = parse_jd(jd_source, run_id=run_id)
+        timings.record("jd_parse", time.time() - started)
+    else:
+        log_event(run_id, "jd_parse.reused",
+                  {"requirements": len(parsed.requirements)})
 
     split = parsed.split()
     warnings = list(parsed.warnings)

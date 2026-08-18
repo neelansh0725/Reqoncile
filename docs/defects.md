@@ -73,6 +73,12 @@ functional impact. **Not fixed, not explained.**
 
 ### D3 — JD extraction is not reproducible (high)
 
+> **Amended (D7):** originally titled "not reproducible at
+> `temperature=0.0`". The configured model ignores `temperature`
+> entirely, so that setting was never in force. The measured rates
+> below are unchanged; the cause is ordinary sampling, not a
+> temperature-0 model behaving strangely.
+
 Found while validating the D1 fix, not by the sweep's audit.
 
 Parsing the *same* JD file, with the same model and `temperature=0.0`
@@ -275,7 +281,9 @@ carried a different adjective. Each verdict is defensible on its own input:
 "strong communication skills" *is* a higher bar, and run A's justification
 reaches for the word *strong* to explain why it stopped short of matched.
 
-**The classifier is not the defect. Extraction is.** Whether the JD's adjective
+**Extraction is a defect here.** (Originally this read "the classifier is
+not the defect" — D7 shows that is too strong: the classifier also varies
+on byte-identical input.) Whether the JD's adjective
 survives into the requirement name is non-deterministic at `temperature=0.0`,
 and that adjective can decide a verdict.
 
@@ -322,3 +330,110 @@ FR23 guard covers the higher-harm case.
 **If it is fixed later**, the honest route is a prompt rule ("ask, never
 assert, that the candidate has done something") plus a re-measurement — not a
 regex. One observation in eighteen is too thin to design a guard against.
+
+
+---
+
+## D6 — The BM25 stemmer was not thread-safe (high, fixed)
+
+Found in T088, when a version diff returned `Python: weak → errored` and the
+traceback landed inside `snowballstemmer`:
+
+```
+IndexError: string index out of range
+  ... in find_among_b: ord(self.current[c - 1 - common])
+```
+
+`retrieval/lexical.py` held **one module-level stemmer instance**. Snowball's
+stemmer keeps per-word parsing state on the object (`self.current`), and
+classification fans out across threads (T034) with every requirement
+tokenising its query. Concurrent calls interleave on that shared state.
+
+**Measured.** Hammering one shared instance from 8 threads over this project's
+own corpus produced **24 IndexErrors**; the identical token list
+single-threaded produced **0**. An earlier attempt with a short uniform word
+list also produced 0 — the bug needs enough token variety to interleave
+badly, which is why it never surfaced in the T068 sweep.
+
+**Fixed** by giving each thread its own stemmer via `threading.local()`. After
+the fix: 0 failures over the same 8-thread hammer, and stemming behaviour is
+unchanged (`orchestration`/`orchestrated` still collapse to `orchestr`,
+`java`/`javascript` stay distinct).
+
+**Does this invalidate earlier measurements?** No, and the reason is worth
+stating rather than assuming: the exception propagates, so a corrupted stem
+surfaces as an **errored requirement**, not as a silently wrong retrieval.
+Errored counts were tracked throughout and were low. The failure was loud, not
+quiet — it was just rare enough to be mistaken for the transport faults D1
+addressed.
+
+---
+
+## D7 — The reasoning model never honoured `temperature=0.0` (high)
+
+This one corrects an assumption running under D3, D4, and the classifier eval.
+
+`config.py` sets `REQONCILE_REASONING_TEMPERATURE=0.0`. The configured model
+is `gemini-3.5-flash-lite`. On **every** call, the provider library emits:
+
+> `Model 'gemini-3.5-flash-lite' uses fixed sampling defaults; the sampling
+> parameter(s) temperature will be ignored.`
+
+Verified directly by capturing warnings around a live call while printing the
+configured value: model `gemini-3.5-flash-lite`, temperature `0.0`, warning
+present.
+
+**`providers.md` documented this trap for the wrong model.** It flagged
+`gemini-3.6-flash` as ignoring `temperature` and advised preferring models
+that honour it "for anything the eval measures" — and then the model actually
+selected, for its daily quota rather than its sampling behaviour, does not
+honour it either.
+
+### What this reframes
+
+**D3 is mis-titled.** "JD extraction is not reproducible **at
+`temperature=0.0`**" implies a deterministic setting was in force and the
+model was non-deterministic anyway. It was not in force. Extraction variance
+is the ordinary behaviour of a model sampling at fixed defaults. The *measured
+rates* in D3 (81% / 58% / 53% name stability) stand exactly as recorded — only
+the explanation changes, and it becomes less mysterious, not more.
+
+**D4's conclusion was too narrow.** D4 said "the classifier is not the defect.
+Extraction is," on the evidence that a reworded requirement drew a different
+verdict. That evidence was real, but the stronger claim it implied — that the
+classifier is stable given stable input — is false:
+
+| run | resume | requirement | verdict |
+|---|---|---|---|
+| `run_20260818T121634` | `v1.txt` | `Python` | **weak** |
+| `run_20260818T153353` | `v1.txt` (byte-identical) | `Python` | **matched** |
+
+Same file, same JD, same requirement name, overlapping evidence chunks
+(`skills-82efe95a`, `projects-db8fb933` cited both times), opposite verdicts:
+
+> weak: "Python is listed under technical skills and mentioned in project
+> titles and certifications, but the resume does not describe its active use
+> in experience bullets."
+>
+> matched: "The resume lists Python in the skills section and shows it being
+> actively used to build the LendingClub Credit Risk Prediction System."
+
+**The classifier is non-deterministic on byte-identical input.** D4 attributed
+run-to-run score movement wholly to extraction; part of it is classification.
+
+### Not fixed, and the options are all bad
+
+- **Switch to a model that honours `temperature`.** `gemini-3.5-flash` does —
+  and allows **20 requests/day**, which cannot run a single JD (`providers.md`).
+- **Set `top_k`/`top_p` instead.** Same warning covers all sampling parameters.
+- **Self-consistency (sample *n*, take the majority).** Multiplies quota by
+  *n* against a 500/day cap, and R4 already deferred the related
+  self-critique pass to v2.
+
+**What it costs, concretely.** Absolute scores were already non-quotable; that
+limitation is unchanged and now has a third mechanism behind it. The coarse
+ranking claim (v1.1) survives, having been measured *across* runs and
+therefore across this variance rather than in spite of it. The classifier eval
+(17/20) is a single-sample measurement and should be read as one draw from a
+distribution, not a fixed score — re-running it would likely land within a
+requirement or two either way, and that spread has never been measured.

@@ -467,6 +467,69 @@ class InterviewPrep(BaseModel):
         return sum(len(p.questions) for p in self.prepared)
 
 
+class ChangeDirection(str, Enum):
+    """Which way a requirement moved between resume versions (FR26)."""
+
+    IMPROVED = "improved"
+    REGRESSED = "regressed"
+    UNCHANGED = "unchanged"
+    # One side errored, so the move is unknown. Not "unchanged" -- claiming no
+    # change we never established is the same over-claim as calling an
+    # unassessed requirement a gap.
+    INDETERMINATE = "indeterminate"
+
+
+class RequirementChange(BaseModel):
+    """One requirement's movement between two resume versions (FR26)."""
+
+    requirement: str
+    before: MatchLabel
+    after: MatchLabel
+    direction: ChangeDirection
+
+    @property
+    def moved(self) -> bool:
+        return self.before is not self.after
+
+
+class VersionDiff(BaseModel):
+    """A diff of one JD against two resume versions (FR24-FR27).
+
+    Computed in pure Python. There is no model call here: comparing two
+    finished classifications is set arithmetic, and asking an LLM to do it
+    would add a way to be wrong about something already known exactly.
+    """
+
+    run_id: str
+    before_run_id: str
+    after_run_id: str
+    before_score: float | None = None
+    after_score: float | None = None
+    changes: list[RequirementChange] = Field(default_factory=list)
+    summary: str = ""
+    warnings: list[str] = Field(default_factory=list)
+
+    @property
+    def improved(self) -> list[RequirementChange]:
+        return [c for c in self.changes
+                if c.direction is ChangeDirection.IMPROVED]
+
+    @property
+    def regressed(self) -> list[RequirementChange]:
+        return [c for c in self.changes
+                if c.direction is ChangeDirection.REGRESSED]
+
+    @property
+    def unchanged(self) -> list[RequirementChange]:
+        return [c for c in self.changes
+                if c.direction is ChangeDirection.UNCHANGED]
+
+    @property
+    def indeterminate(self) -> list[RequirementChange]:
+        return [c for c in self.changes
+                if c.direction is ChangeDirection.INDETERMINATE]
+
+
 class RankedJD(BaseModel):
     """One job description's position in a comparison (FR19)."""
 

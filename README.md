@@ -186,8 +186,13 @@ catch inflation phrased entirely in new words. A suggestion that overstates
 using vocabulary absent from both the original and the requirement will pass
 clean.
 
-**Extraction is not fully reproducible at `temperature=0.0`.** Parsing the same
-JD three times produces requirement names that agree:
+**Extraction is not fully reproducible, and `temperature=0.0` is not actually
+in force.** The configured reasoning model, `gemini-3.5-flash-lite`, **ignores
+the `temperature` parameter** — the provider library says so on every call. It
+is selected for its daily quota, which is the only free option large enough to
+run this project (`docs/providers.md`), not for its sampling behaviour. So the
+variance below is ordinary sampling, not a temperature-0 model misbehaving.
+Parsing the same JD three times produces requirement names that agree:
 
 | JD | names present in all 3 parses |
 |---|---:|
@@ -203,6 +208,12 @@ parse, and within any single parse there are zero near-duplicates.
 
 Since the requirement count is the score's denominator, **absolute match
 scores are not quotable.** A score is specific to the run that produced it.
+
+**Classification varies run to run as well, on byte-identical input.** The same
+resume and JD returned `Python: weak` in one run and `Python: matched` in
+another, citing overlapping evidence both times (`docs/defects.md`, D7). The
+classifier eval (17/20) is therefore one draw, not a fixed score; the spread
+across repeated runs has not been measured.
 
 The intended narrower claim — that the *ordering* of JDs against one resume is
 stable even when extraction volume moves — is **not yet measured under the

@@ -29,6 +29,8 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Iterable, Sequence
 
+import threading
+
 import snowballstemmer
 
 # Keep +/# so "C++" and "C#" survive as distinct terms.
@@ -48,7 +50,20 @@ proficient understanding work working works
 """.split())
 
 
-_stemmer = snowballstemmer.stemmer("english")
+# One stemmer per thread. Snowball's stemmer object carries per-word parsing
+# state on the instance, so a single shared instance corrupts under concurrent
+# use -- classification fans out across threads (T034) and every requirement
+# tokenises, so this path is genuinely concurrent. Measured: hammering one
+# shared instance from 8 threads over this corpus produced 24 IndexErrors,
+# while single-threaded it produced none. See D6.
+_thread_state = threading.local()
+
+
+def _get_stemmer() -> "snowballstemmer.stemmer":
+    stemmer = getattr(_thread_state, "stemmer", None)
+    if stemmer is None:
+        stemmer = _thread_state.stemmer = snowballstemmer.stemmer("english")
+    return stemmer
 
 
 def stem(word: str) -> str:
@@ -61,7 +76,7 @@ def stem(word: str) -> str:
     matter here (java/javascript, react/reactive, docker/dock all stay
     distinct). Small pure-Python dependency; worth it over a bad reimplementation.
     """
-    return _stemmer.stemWord(word)
+    return _get_stemmer().stemWord(word)
 
 
 def tokenize(text: str) -> list[str]:
