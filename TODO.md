@@ -504,95 +504,126 @@ Legend: `Refs:` maps to PRD functional requirements / NFRs / risks / success met
 
 ## Phase 9 — Multi-JD Comparison Mode (FR17–FR20)
 
-- [ ] **T073 — Loop the pipeline over multiple JDs**
+- [x] **T073 — Loop the pipeline over multiple JDs**
   `agent/comparator.py`: run `run_pipeline` once per JD (2–3) against one resume,
   reusing the existing pipeline unchanged.
   *Done when:* three JDs produce three independent reports in one call.
   *Refs:* FR18, FR20
 
-- [ ] **T074 — Implement the ranking step**
+- [x] **T074 — Implement the ranking step**
   Single LLM call over the N reports producing a ranked list with a one-line reason
   per rank; validated against a `JDRanking` schema.
   *Done when:* three real JDs come back ranked with reasons.
   *Refs:* FR19
 
-- [ ] **T075 — Add `POST /compare`**
+- [x] **T075 — Add `POST /compare`**
   Accepts 2–3 JDs + one resume, returns per-JD scores plus the ranking.
   *Done when:* a curl call returns a complete comparison payload.
 
-- [ ] **T076 — Build the comparison view**
+- [x] **T076 — Build the comparison view**
   Ranked JD cards with score, reason, and a link into each full report.
   *Done when:* a three-JD comparison renders and each report is reachable.
   *Refs:* FR19
 
-- [ ] **T077 — Validate ranking against manual judgment**
+- [x] **T077 — Validate ranking against manual judgment**
   Run two real placement-season JDs; check the ranking matches your own assessment.
   *Done when:* the result is recorded, agreement or disagreement explained.
+  *Status:* three JDs. Manual ranking committed **before** the run (938cd42);
+  system matched it exactly. `docs/comparison_eval.md`. Also surfaced D4.
   *Refs:* SM4
 
 ---
 
 ## Phase 10 — Interview Prep Mode (FR21–FR23)
 
-- [ ] **T078 — Define the gap-question schema**
+- [x] **T078 — Define the gap-question schema**
   `GapQuestion`: requirement, question, `what_an_honest_answer_covers`.
   *Done when:* the schema has no field that could hold a first-person sample answer.
+  *Status:* shipped as `answer_should_cover`, with a validator that rejects
+  first-person phrasing — the field cannot *hold* a sample answer.
   *Refs:* FR22, FR23
 
-- [ ] **T079 — Write the interview-prep prompt**
+- [x] **T079 — Write the interview-prep prompt**
   `agent/interview_prep.py`: generate 2–3 probing questions per Gap, plus a description
   of what an honest answer must address. Explicitly forbid drafting a first-person
   answer implying experience the candidate lacks.
   *Done when:* one live call returns valid questions with no fabricated experience.
   *Refs:* FR21, FR22, FR23
 
-- [ ] **T080 — Gate generation to Gap classifications only**
+- [x] **T080 — Gate generation to Gap classifications only**
   *Done when:* a unit test asserts it refuses non-`gap` inputs.
   *Refs:* FR21
 
-- [ ] **T081 — Test the prompt against real gaps**
+- [x] **T081 — Test the prompt against real gaps**
   Run against 3–4 real Gaps; confirm no output drifts into a memorizable sample answer;
   record in `docs/interview_prep_test.md`.
   *Done when:* all outputs pass the no-fabrication read-through.
+  *Status:* six real gaps × two configs. Recorded in `docs/interview_prep.md`.
+  Baseline: 2/12 attempts drafted a first-person sample answer; the schema
+  caught **2/2**, leaked **0**. One prompt fix, then 12/12 clean — reported
+  with the caveat that this has an ~11% chance of luck at the baseline rate.
   *Refs:* FR23, R2
 
-- [ ] **T082 — Surface interview prep in API and UI**
+- [x] **T082 — Surface interview prep in API and UI**
   Include questions in the report payload; render them under each Gap.
   *Done when:* Gaps in the UI show their questions inline.
+  *Status:* `POST /interview-prep/{run_id}` rather than inside the report
+  payload — prep costs ~20s per gap locally, so making every analysis wait for
+  it would have broken NFR1 for a feature most runs do not need. On-demand
+  button in the UI.
 
-- [ ] **T083 — Validate question plausibility**
+- [x] **T083 — Validate question plausibility**
   Check generated questions for a real Gap read as questions you'd genuinely expect.
   *Done when:* assessment recorded.
+  *Status:* SM5 met, with two measured qualifications — a "how do you stay
+  current" question appears in **6/6** gaps, and 15/18 notes open with the same
+  three words. One question presupposed experience the classifier had just
+  called a gap (**D5**).
   *Refs:* SM5
 
 ---
 
 ## Phase 11 — Resume Version Diffing (FR24–FR27)
 
-- [ ] **T084 — Implement `diff_classifications`**
+- [x] **T084 — Implement `diff_classifications`**
   `agent/diff.py`: pure Python, match by requirement name, bucket into
   improved / regressed / unchanged. No LLM.
+  *Status:* shipped as `agent/differ.py`. A fourth bucket was needed —
+  `indeterminate`, for a requirement that errored on one side. Calling that
+  "unchanged" would claim a stability never established.
   *Done when:* unit tests cover Gap→Weak, Weak→Matched, Matched→Weak, and unchanged.
   *Refs:* FR26, TechStack §4.3
 
-- [ ] **T085 — Compute the net-improvement summary line**
+- [x] **T085 — Compute the net-improvement summary line**
   Single summary sentence quantifying net movement plus score delta.
   *Done when:* the line is correct on a fixture with mixed movement.
+  *Status:* the score delta is **withheld** whenever the two versions did not
+  score the same requirement set — otherwise the line reads "net improvement,
+  score down 8 points", which is denominator drift, not a finding.
   *Refs:* FR27
 
-- [ ] **T086 — Add the two-version orchestration endpoint**
+- [x] **T086 — Add the two-version orchestration endpoint**
   `POST /diff`: two resume versions + one JD → two independent pipeline runs (isolated
   Chroma collections, per T022) → diff result.
   *Done when:* a curl call with two real resume versions returns a diff.
+  *Status:* the JD is parsed **once** and shared. Two parses would have made
+  extraction noise (D3/D4) look like resume progress. FR25 asks that FR6–FR9
+  be re-run per version — they are; only the parse is shared.
   *Refs:* FR24, FR25
 
-- [ ] **T087 — Build the diff view**
+- [x] **T087 — Build the diff view**
   Summary line at top; per-requirement movement list below with before/after labels.
   *Done when:* a real two-version diff renders clearly.
   *Refs:* FR26, FR27
 
-- [ ] **T088 — Validate diffing on two real resume versions**
+- [x] **T088 — Validate diffing on two real resume versions**
   *Done when:* at least one requirement is shown correctly moving up a category.
+  *Status:* SM6 met — `Vector databases` gap → matched, 20 unchanged, nothing
+  spurious (`docs/version_diff.md`). Took three attempts; the two failures were
+  the more useful results. Applying Reqoncile's **own** rewrites moved nothing
+  (a skills-list claim restated more clearly is still a skills-list claim), and
+  the second attempt surfaced **D6**, a thread-unsafe stemmer — which the diff
+  reported correctly as `indeterminate` rather than as movement.
   *Refs:* SM6
 
 ---
@@ -614,5 +645,8 @@ Legend: `Refs:` maps to PRD functional requirements / NFRs / risks / success met
   *Done when:* the script can be followed start to finish in one sitting.
   *Refs:* SM2, SM3, R2
 
-- [ ] **T092 — Final polish and tag v1.1**
-  *Done when:* `v1.1` tag exists and the README covers all three added modes.
+- [ ] **T092 — Final polish and tag v1.2**
+  *Done when:* the tag exists and the README covers all three added modes.
+  *Note:* this task predates the ranking-measurement work, which already took
+  the `v1.1` tag (that release narrowed the ranking claim to what the data
+  supports). These three feature modes therefore ship as **v1.2**.

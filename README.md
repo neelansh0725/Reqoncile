@@ -13,7 +13,16 @@ Those need different responses — a gap should be stated plainly, an
 under-communicated skill should be rewritten — and telling them apart is the
 part that cannot be done by counting keywords.
 
-> **Status: v1.1 — ranking claim now measured.** Reqoncile reliably separates
+> **Status: v1.2 — all three v1.1 feature modes shipped.** Multi-JD comparison
+> (FR17–FR20), interview prep for gaps (FR21–FR23), and resume version diffing
+> (FR24–FR27), each validated against its success metric and each with its
+> limitations measured: `docs/comparison_eval.md`, `docs/interview_prep.md`,
+> `docs/version_diff.md`. Two defects found while validating them are recorded
+> rather than quietly fixed — including **D7, that the reasoning model never
+> honoured `temperature=0.0` at all**, which corrects an assumption running
+> under three earlier findings.
+>
+> **On the ranking claim (v1.1, unchanged).** Reqoncile reliably separates
 > strong-fit JDs from weak-fit ones; it does not resolve fine-grained rank
 > among JDs of similar strength. Across a full re-run with the extraction rule
 > applied, the weakest-fit JDs held their exact positions — ranks 6, 7 and 8
@@ -138,6 +147,9 @@ cd frontend && npm install && npm run dev # http://localhost:5173
 |---|---|
 | `GET /health` | Status plus which model backs each tier |
 | `POST /analyze` | JD + resume text → full report, as JSON **and** rendered Markdown |
+| `POST /compare` | 2–3 JDs + one resume → per-JD reports plus a ranking that reports ties (FR17–FR20) |
+| `POST /diff` | One JD + two resume versions → what moved between them (FR24–FR27) |
+| `POST /interview-prep/{run_id}` | Questions for a completed run's gaps, and what an honest answer covers (FR21–FR23) |
 | `POST /upload-resume` | PDF → extracted text, for the user to check before analysing |
 | `GET /trace/{run_id}` | The classifier's reasoning trace: what was retrieved, what was cited, what was rejected (FR16) |
 | `GET /docs` | Generated OpenAPI docs |
@@ -145,6 +157,31 @@ cd frontend && npm install && npm run dev # http://localhost:5173
 Worked examples with real payloads: `docs/api_examples.md`.
 
 ---
+
+## The three v1.2 modes
+
+Each is a thin layer over the single-JD pipeline, per the PRD's own constraint
+(FR20, FR25): if one had needed new reasoning capability, that was the signal to
+cut scope rather than add complexity.
+
+**Compare up to 3 jobs** — runs the unchanged pipeline per JD, then one ranking
+call. **The ranking reports ties.** That is not hedging: v1.1 measured that this
+system separates strong fits from weak ones but cannot resolve rank between JDs
+of similar strength, so `RankedJD.tied_with` exists and the prompt is told to
+use it. The measurement changed the design rather than being written around.
+
+**Prepare for the gaps** — 2–3 interview questions per Gap, each with a note on
+what an honest answer must *cover*. FR23's ban on fabricated sample answers lives
+in the schema: a validator rejects first-person phrasing in that note. It caught
+a real violation immediately — given an explicit instruction not to, `llama3:8b`
+appended *"For example, 'In my previous role, I worked with…'"* to every note.
+The prompt did not hold; the validator did.
+
+**Compare two resume drafts** — one JD, two versions, showing what moved.
+**The JD is parsed once and shared across both runs.** Extraction is not
+reproducible, so two parses would produce a diff contaminated by extraction
+noise that looks exactly like resume progress. A score delta is withheld
+entirely whenever the two versions did not score the same requirement set.
 
 ## Design decisions worth defending
 
@@ -215,12 +252,11 @@ another, citing overlapping evidence both times (`docs/defects.md`, D7). The
 classifier eval (17/20) is therefore one draw, not a fixed score; the spread
 across repeated runs has not been measured.
 
-The intended narrower claim — that the *ordering* of JDs against one resume is
-stable even when extraction volume moves — is **not yet measured under the
-current extraction rule.** The nine-JD re-ordering run that would establish it
-exhausted the provider's daily quota after three JDs, so six returned no
-result. Treat the ranking as plausible and unverified rather than
-demonstrated. See `docs/defects.md` (D3).
+The narrower claim — that the *ordering* of JDs against one resume survives
+extraction volume moving — **has since been measured**, and only partly held:
+coarse separation survived, fine-grained rank did not (see the status note
+above, and `docs/defects.md` D3 addendum). The claim in this README is scoped to
+what survived.
 
 **A concrete instance of that:** the MathCo demo run scores **44.4%**, while
 the same JD scored **50.0%** in the earlier sweep. Nothing about the resume or
@@ -250,6 +286,21 @@ Whatever drives the residual movement, it is not simply the denominator.
 direction, but some rewrites a candidate would benefit from are refused
 (`docs/fabrication_test.md`).
 
+**A rewrite cannot move a verdict that depends on *where* the evidence sits.**
+Rewrites rephrase the line the evidence already occupies. If that line is in
+SKILLS, saying it more explicitly does not change the kind of evidence, and the
+classifier correctly holds the verdict at weak. Applying Reqoncile's own
+suggestions to the resume moved **nothing** — measured, not assumed
+(`docs/version_diff.md`). To move such a requirement, the experience has to
+appear in a project or experience bullet.
+
+**Interview-prep questions are templated.** A "how do you stay current with…"
+question appeared in **6 of 6** gaps, and 15 of 18 answer-notes open with the
+same three words. Within a gap the questions differ; across gaps one slot is
+predictable, so the real yield is closer to two useful questions per gap than
+three. One question in eighteen also *presupposed* experience the classifier had
+just called a gap (`docs/defects.md`, D5).
+
 **Two retrieval failures are a known ceiling.** *"Model deployment"* against
 *"Designed a FastAPI + React application supporting real-time and batch
 scoring"* has no shared term for BM25 and is dominated by tool names for the
@@ -271,9 +322,13 @@ requirement, so a 50-requirement JD takes minutes by arithmetic
 | Retrieval: 8/8 paraphrase probes, 7% mean lexical overlap | `test_data/retrieval_notes.md` |
 | Fabrication: 0 unflagged across 14 baited rewrites | `docs/fabrication_test.md` |
 | SM2 / SM3 demonstrated end to end | `docs/success_metrics.md` |
+| SM4: ranking vs a manual ranking committed *before* the run | `docs/comparison_eval.md` |
+| SM5: interview prep — 2/12 fabrication attempts, 2/2 caught, 0 leaked | `docs/interview_prep.md` |
+| SM6: a gap moving to matched between two real resume versions | `docs/version_diff.md` |
 | Latency and the NFR1 budget | `docs/latency.md` |
 | Defects found, fixed, and deliberately not fixed | `docs/defects.md` |
 | Free-tier quotas, measured | `docs/providers.md` |
+| A 30-minute demo script | `docs/demo.md` |
 
 ## Layout
 
