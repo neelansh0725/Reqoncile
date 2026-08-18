@@ -30,3 +30,5 @@ frontend/dist/
 .DS_Store
 
 # Frontend build output
+.claude/
+.playwright/

@@ -13,11 +13,13 @@ Those need different responses — a gap should be stated plainly, an
 under-communicated skill should be rewritten — and telling them apart is the
 part that cannot be done by counting keywords.
 
-> **Status: v1, actively maintained.** One claim below is marked unverified —
-> that JD *rankings* are stable even though absolute scores are not. The
-> nine-JD re-ordering run that confirms it hit the provider's daily quota
-> after three JDs; it is queued and will be verified in v1.1. Everything else
-> in [Measured results](#measured-results) is measured and reproducible.
+> **Status: v1.1 — ranking claim now measured.** Reqoncile reliably separates
+> strong-fit JDs from weak-fit ones; it does not resolve fine-grained rank
+> among JDs of similar strength. Across a full re-run with the extraction rule
+> applied, the weakest-fit JDs held their exact positions — ranks 6, 7 and 8
+> were unchanged, as was rank 4 — while the top four reordered among
+> themselves within a 10-point score band. Kendall's tau between the two
+> rankings is **+0.63**, with **22 of 27** pairwise orderings preserved.
 
 ---
 
@@ -214,6 +216,24 @@ the same JD scored **50.0%** in the earlier sweep. Nothing about the resume or
 the classifier changed — the granularity rule changed how many requirements
 that JD yields, and the denominator moved with it. Do not read the two numbers
 as a regression.
+
+**One of the nine sample JDs cannot be scored at all.**
+`zs_decision_analytics_associate` extracts bimodally: three parses returned
+**0, 0 and then 5** classifiable requirements (1, 1 and 6 extracted, of which
+the first two were eligibility-only and therefore never classified). With
+nothing classifiable there is no score, so it is excluded from the ranking
+above rather than represented by whichever sample happened to look usable.
+
+Its collapse mode is worth naming: it is the most prose-heavy JD in the set,
+with a requirements section written as five soft-skill bullets and no
+technical list. Extraction either reads those bullets as requirements or reads
+the whole section as narrative.
+
+**What the ranking measurement does and does not cover.** It compares two
+runs, not many. Rank movement did **not** track extraction volume in the way
+one might expect: EY's requirement count grew fivefold (10 → 50) and its rank
+did not move, while `zs_bts` grew only 1.3× (10 → 13) and moved three places.
+Whatever drives the residual movement, it is not simply the denominator.
 
 **`llama3:8b` declines roughly 60% of rewrites.** The bias runs in the safe
 direction, but some rewrites a candidate would benefit from are refused

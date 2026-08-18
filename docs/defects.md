@@ -204,3 +204,47 @@ returns.
 - **Rate-limited calls (429).** The free tier refusing a request is quota, not a bug. They are logged to `classify.rate_limited` and prefixed `RATE_LIMITED:` so they can never be mistaken for a real failure.
 - **Declined rewrites.** `llama3:8b` declines ~60% of the time (`docs/fabrication_test.md`); refusing to embellish is the intended behaviour.
 - **Requirements classified as gaps.** A gap is a finding, not an error.
+
+
+---
+
+## D3 addendum — the ranking measurement (v1.1)
+
+The nine-JD re-ordering finally ran on a full daily budget: 13.8 minutes, zero
+errored requirements, zero 429s.
+
+**The pre-registered falsification test passed.** EY was nominated in advance
+as the case most likely to break the ranking claim, because the granularity
+rule took its requirement count from 10 to 50. Its rank did not move: 6 before,
+6 after.
+
+| | pre-rule | post-rule |
+|---|---|---|
+| rank | 6 | **6** |
+| score | 41.5% | 32.3% |
+| requirements | 10 | **50 (5.0x)** |
+
+**But the broader claim is only partly supported.** Of eight rankable JDs,
+four held their exact position (ranks 4, 6, 7, 8), the largest move was three
+places, Kendall's tau is **+0.63**, and 22 of 27 pairwise orderings survived.
+Coarse separation holds; fine-grained rank does not.
+
+**The pre-agreed fallback wording was rejected on the data.** "Stable under
+classification and scoring but sensitive to extraction volume" predicts the
+opposite of what happened — EY absorbed a 5x volume change without moving,
+while `zs_bts` moved three places on a 1.3x change. Volume does not explain
+movement, so that phrasing was not published.
+
+### A methodological correction
+
+`zs_decision_analytics_associate` returned one eligibility-only requirement in
+two consecutive pipeline runs, and that was called "reproducible, not a fluke"
+at the time. **A third parse returned 6 requirements, 5 of them classifiable.**
+Two samples were not enough to distinguish a systematic failure from the
+bimodal extraction already documented above, and the conclusion drawn from
+them was wrong.
+
+The JD is excluded from the ranking rather than re-run until it produced a
+usable score — running until the number cooperates is sample selection, not
+measurement. The claim was never published; it is recorded here because the
+reasoning error is the point.
