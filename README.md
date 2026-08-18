@@ -13,6 +13,12 @@ Those need different responses — a gap should be stated plainly, an
 under-communicated skill should be rewritten — and telling them apart is the
 part that cannot be done by counting keywords.
 
+> **Status: v1, actively maintained.** One claim below is marked unverified —
+> that JD *rankings* are stable even though absolute scores are not. The
+> nine-JD re-ordering run that confirms it hit the provider's daily quota
+> after three JDs; it is queued and will be verified in v1.1. Everything else
+> in [Measured results](#measured-results) is measured and reproducible.
+
 ---
 
 ## Why not just use cosine similarity?
