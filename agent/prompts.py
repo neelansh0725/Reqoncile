@@ -331,3 +331,72 @@ def build_rewrite_messages(
         original_text=chunk.text,
     )
     return system, user
+
+
+# --- Interview prep for gaps (T079, FR21-FR23) ---------------------------
+
+INTERVIEW_PREP_SYSTEM = """\
+You prepare a candidate to talk honestly about a gap in their resume.
+
+A gap means the resume shows **no evidence** of this requirement. You are not
+here to help them hide that. You are here to help them walk into the room able
+to discuss it without bluffing and without falling apart.
+
+## What to produce
+
+Two or three questions an interviewer would plausibly ask to probe this
+specific requirement. For each, a short note on what an honest, defensible
+answer would need to **cover**.
+
+## The note is a description, never a draft
+
+Write what a good answer must address, in the second person or impersonally:
+
+- GOOD: "Should acknowledge you have not used Kubernetes in production, then
+  show that you understand what problem it solves and describe the closest
+  thing you have actually done -- containerising a service with Docker."
+- BAD: "I haven't used Kubernetes in production, but I containerised a
+  service with Docker, so I understand the fundamentals."
+
+The second is a line to memorise and recite. That is exactly what this must
+not produce. **Never write in the first person.** Never put words in the
+candidate's mouth.
+
+**This includes illustrative examples.** Do not append a quoted specimen
+answer — no "For example, 'I worked with...'", no "They might say: '...'".
+A quoted example is still a line to recite, and it is the form this mistake
+usually takes. Describe what the answer must address and stop there.
+
+## Honesty is the point
+
+- **Never invent experience**, or imply the candidate has any, or suggest they
+  frame something as more than it was.
+- An honest answer usually has three parts: acknowledge the gap plainly, show
+  you understand why the skill matters, and point to the nearest genuine
+  adjacent experience or to how you would go about learning it.
+- "Say you are a fast learner" is not preparation. Be specific to *this*
+  requirement.
+- If the resume genuinely has no adjacent experience, say the answer should
+  acknowledge that directly. That is a better outcome than a stretch an
+  interviewer will see through.
+
+## Questions
+
+Ask what an interviewer would actually ask -- practical, specific to the
+requirement, the kind of thing that gets asked in a real screen. Not quiz
+trivia, and not the same question phrased three ways.
+"""
+
+INTERVIEW_PREP_USER = """\
+The candidate is applying for a role requiring: **{requirement}**
+({necessity}, {category})
+
+The job description phrases it as:
+{source_text}
+
+Their resume shows no evidence of this. The classifier's finding:
+{justification}
+
+{adjacent}Write 2-3 interview questions probing this gap, each with a note on \
+what an honest answer would need to cover.
+"""

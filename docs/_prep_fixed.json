@@ -1,0 +1,128 @@
+[
+  {
+    "requirement": "Applied Statistics",
+    "seconds": 17.4,
+    "ok": true,
+    "fr23_violation": false,
+    "questions": [
+      {
+        "question": "Can you walk me through a time when you had to analyze a complex data set and draw meaningful insights from it? How did you approach the task?",
+        "answer_should_cover": "Acknowledge the lack of direct experience with applied statistics, then explain how the candidate's data modeling and SQL skills could be applied to a similar task. Highlight the importance of understanding data relationships and being able to extract valuable insights."
+      },
+      {
+        "question": "How do you stay current with advancements in data analysis and visualization tools? Have you had any opportunities to apply these skills in a real-world setting?",
+        "answer_should_cover": "Acknowledge the lack of direct experience with applied statistics, then discuss the candidate's familiarity with data visualization tools like Power BI and their ability to learn new tools. Emphasize the importance of staying up-to-date with industry developments and being proactive in seeking out opportunities to apply skills."
+      },
+      {
+        "question": "What do you think are the most important considerations when working with large datasets, and how would you ensure that your findings are accurate and reliable?",
+        "answer_should_cover": "Acknowledge the lack of direct experience with applied statistics, then discuss the candidate's understanding of data quality and the importance of data cleaning and preprocessing. Highlight the need for rigorous analysis and the importance of verifying findings through multiple methods."
+      }
+    ],
+    "error": ""
+  },
+  {
+    "requirement": "Communication",
+    "seconds": 20.0,
+    "ok": true,
+    "fr23_violation": false,
+    "questions": [
+      {
+        "question": "Can you give an example of a time when you had to explain a complex technical concept to a non-technical person?",
+        "answer_should_cover": "Acknowledge the gap in explaining technical decisions, trade-offs, and limitations to stakeholders. Show understanding of the importance of clear communication. Point to the nearest honest thing to explain, such as explaining AI models for transparency, and describe how that experience could be applied to explaining technical decisions to stakeholders."
+      },
+      {
+        "question": "How do you stay up-to-date with the latest developments in AI and machine learning, and how do you communicate those insights to others?",
+        "answer_should_cover": "Acknowledge the gap in clearly explaining technical decisions, trade-offs, and limitations to stakeholders. Show understanding of the importance of clear communication. Point to the experience of implementing Explainable AI (XAI) techniques to improve model transparency and detection accuracy, and describe how that experience could be applied to communicating insights to others."
+      },
+      {
+        "question": "In your previous role, you worked on a project that required collaboration with stakeholders. Can you walk me through how you ensured that everyone was on the same page?",
+        "answer_should_cover": "Acknowledge the gap in explaining technical decisions, trade-offs, and limitations to stakeholders. Show understanding of the importance of clear communication. Point to the experience of assisting in documentation management and digital coordination activities, and describe how that experience could be applied to ensuring everyone was on the same page."
+      }
+    ],
+    "error": ""
+  },
+  {
+    "requirement": "PyTorch",
+    "seconds": 23.5,
+    "ok": true,
+    "fr23_violation": false,
+    "questions": [
+      {
+        "question": "Can you walk me through your experience with deep learning frameworks? How do you stay current with the latest developments in PyTorch or other popular frameworks?",
+        "answer_should_cover": "Acknowledge the lack of direct experience with PyTorch, show understanding of why it's a valuable skill, and point to the nearest adjacent experience or how you would go about learning it. For example, discuss the candidate's experience with CNN and BERT, and how they understand the importance of PyTorch in the field."
+      },
+      {
+        "question": "How do you approach building and training machine learning models? Have you had any experience with PyTorch or other popular deep learning frameworks?",
+        "answer_should_cover": "Acknowledge the gap in PyTorch experience, highlight the candidate's experience with building and training machine learning models, and explain how they would approach learning PyTorch. For example, discuss their experience with XAI techniques and how they would apply that knowledge to learn PyTorch."
+      },
+      {
+        "question": "What do you think are the key benefits of using PyTorch for deep learning tasks? How do you think it compares to other popular frameworks like TensorFlow or Keras?",
+        "answer_should_cover": "Acknowledge the lack of direct experience with PyTorch, show understanding of its benefits and how it compares to other frameworks, and point to the nearest adjacent experience or how they would go about learning it. For example, discuss the candidate's experience with ETL pipelines and how they understand the importance of PyTorch in data processing and analytics-ready data."
+      }
+    ],
+    "error": ""
+  },
+  {
+    "requirement": "Hugging Face",
+    "seconds": 22.0,
+    "ok": true,
+    "fr23_violation": false,
+    "questions": [
+      {
+        "question": "Can you tell me more about your experience with Hugging Face? We're looking for candidates with a strong background in this area.",
+        "answer_should_cover": "Acknowledge the gap, explain what Hugging Face does, and highlight the candidate's understanding of its importance in NLP. For example, discuss how Hugging Face's transformers can accelerate model development and deployment, and how the candidate would approach learning more about it."
+      },
+      {
+        "question": "How do you stay up-to-date with the latest developments in NLP, and what tools or frameworks do you use to build and deploy models?",
+        "answer_should_cover": "Acknowledge the gap, explain how Hugging Face is a key player in the NLP space, and discuss the candidate's approach to learning and staying current with industry developments. For example, mention the candidate's interest in exploring Hugging Face's pre-trained models and fine-tuning them for specific tasks."
+      },
+      {
+        "question": "In your previous role at Achal Welfare Foundation, you built a full-stack ops dashboard. How do you think Hugging Face's transformers could be applied to a project like that, and what benefits do you think it would bring?",
+        "answer_should_cover": "Acknowledge the gap, explain how Hugging Face's transformers can be applied to a project like the one mentioned, and highlight the candidate's understanding of the benefits it would bring. For example, discuss how Hugging Face's transformers could be used for natural language processing tasks, such as text classification or sentiment analysis, to enhance the dashboard's functionality."
+      }
+    ],
+    "error": ""
+  },
+  {
+    "requirement": "Vector Databases",
+    "seconds": 17.0,
+    "ok": true,
+    "fr23_violation": false,
+    "questions": [
+      {
+        "question": "Can you tell me about your experience with databases? How do you think your skills in relational databases and MongoDB could be applied to a role that requires vector databases?",
+        "answer_should_cover": "Acknowledge the gap in vector database experience, highlight the relevance of relational databases and MongoDB, and explain how the candidate would approach learning vector databases or how their existing skills could be adapted to work with them."
+      },
+      {
+        "question": "What do you think are the key differences between relational databases and vector databases? How do you think your experience with relational databases could be leveraged to work with vector databases?",
+        "answer_should_cover": "Acknowledge the gap in vector database experience, explain the differences between relational and vector databases, and describe how the candidate's existing experience with relational databases could be applied to work with vector databases."
+      },
+      {
+        "question": "How do you stay current with new technologies and trends in the database space? Have you had any exposure to vector databases or similar technologies?",
+        "answer_should_cover": "Acknowledge the gap in vector database experience, describe the candidate's approach to staying current with new technologies and trends, and explain how they would go about learning about vector databases or similar technologies."
+      }
+    ],
+    "error": ""
+  },
+  {
+    "requirement": "LLM Evaluation",
+    "seconds": 18.7,
+    "ok": true,
+    "fr23_violation": false,
+    "questions": [
+      {
+        "question": "Can you walk me through your experience with machine learning models? How do you stay up-to-date with advancements in the field?",
+        "answer_should_cover": "Acknowledge the lack of LLM evaluation experience, show understanding of the importance of staying current with advancements in machine learning, and point to the candidate's own efforts to learn and stay updated, such as attending webinars, reading articles, or participating in online forums."
+      },
+      {
+        "question": "How do you approach problem-solving when working with complex data sets? Can you give me an example from your previous projects?",
+        "answer_should_cover": "Acknowledge the lack of LLM evaluation experience, highlight the candidate's ability to work with complex data sets, and provide an example from their previous projects that demonstrates their problem-solving skills, without implying that it involves LLM evaluation."
+      },
+      {
+        "question": "What do you think are the most important skills for a data scientist to have in today's landscape, and how do you prioritize developing those skills?",
+        "answer_should_cover": "Acknowledge the lack of LLM evaluation experience, demonstrate an understanding of the importance of LLM evaluation in the field, and highlight the candidate's own efforts to develop relevant skills, such as taking online courses or attending workshops, without implying that they have direct experience with LLM evaluation."
+      }
+    ],
+    "error": ""
+  }
+]

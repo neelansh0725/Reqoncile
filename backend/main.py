@@ -22,7 +22,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi import Path as FastPath
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
@@ -32,12 +32,13 @@ from logging_utils import RUN_ID_PATTERN, is_valid_run_id, read_run
 from parsing.resume_parser import ResumeParseError, load_resume_text
 from pipeline import run_pipeline
 from agent.comparator import MAX_JDS, compare_jds
+from agent.interview_prep import load_gaps_from_run, prepare_for_gaps
 from reporting.generate_report import (
     render_comparison_markdown,
     render_markdown,
 )
 from retrieval.embed import EmbeddingError, get_embedding_model
-from schemas import AlignmentReport, ComparisonResult
+from schemas import AlignmentReport, ComparisonResult, InterviewPrep
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,11 @@ logger = logging.getLogger(__name__)
 # text. These exist to reject accidents, not to be tight.
 MAX_JD_CHARS = 60_000
 MAX_RESUME_CHARS = 200_000
+# Interview prep runs on the local generation tier at roughly a minute or more
+# per gap (docs/interview_prep.md), so an unbounded request on a 17-gap report
+# would hang for half an hour. The cap is a latency guard, not a quota one.
+DEFAULT_PREP_LIMIT = 5
+MAX_PREP_LIMIT = 15
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
@@ -325,6 +331,66 @@ def trace(
         for payload in [event.get("payload", {})]
     ]
     return TraceResponse(run_id=run_id, steps=steps)
+
+
+class InterviewPrepResponse(BaseModel):
+    prep: InterviewPrep
+    gaps_found: int
+    total_seconds: float
+
+
+@app.post("/interview-prep/{run_id}", response_model=InterviewPrepResponse)
+def interview_prep(
+    run_id: str = FastPath(
+        ...,
+        pattern=RUN_ID_PATTERN,
+        description="Run id of a completed analysis.",
+        examples=["run_20260816T211407_faef3935"],
+    ),
+    limit: int = Query(
+        DEFAULT_PREP_LIMIT, ge=1, le=MAX_PREP_LIMIT,
+        description="Cap on gaps prepared; local generation is slow.",
+    ),
+) -> InterviewPrepResponse:
+    """Interview questions for a completed run's gaps (FR21-FR23).
+
+    Takes a run id rather than a report body for the same reason `/trace`
+    does: the classifications are already the durable record, and rebuilding
+    them from the log means the questions are generated against exactly what
+    was decided, not a client-supplied restatement of it.
+
+    Runs on the local generation tier, which is slow -- see the `limit`
+    parameter and `docs/interview_prep.md`.
+    """
+    if not is_valid_run_id(run_id):
+        raise HTTPException(status_code=400, detail=f"malformed run id {run_id!r}")
+
+    try:
+        gaps, chunk_texts = load_gaps_from_run(run_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    if not gaps:
+        raise HTTPException(
+            status_code=404,
+            detail=f"no gaps recorded for run {run_id!r} — either the run does "
+                   "not exist, or every requirement was matched or weak.",
+        )
+
+    started = time.time()
+    try:
+        prep = prepare_for_gaps(gaps, chunk_texts=chunk_texts,
+                                run_id=run_id, limit=limit)
+    except LLMConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("interview prep failed")
+        raise HTTPException(status_code=500,
+                            detail=f"interview prep failed: {exc}") from exc
+
+    return InterviewPrepResponse(
+        prep=prep, gaps_found=len(gaps), total_seconds=time.time() - started
+    )
 
 
 @app.post("/upload-resume", response_model=UploadResumeResponse)

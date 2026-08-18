@@ -292,3 +292,33 @@ mechanism behind it. It does **not** undermine the ranking claim: in the same
 pair of runs `advantest_ai_engineering_intern` was identical (60.7%, 9/6/6),
 osfin moved 5.6 points, and the rank order did not change
 (`docs/comparison_eval.md`).
+
+
+---
+
+## D5 — An interview-prep question can presuppose experience (low)
+
+Found in T083. FR23 is enforced on `GapQuestion.answer_should_cover`, which is
+where a fabricated *answer* would appear. The `question` field has no such
+guard, and one question in eighteen used it to assert experience:
+
+> "**In your previous role, you worked on a project that required
+> collaboration with stakeholders.** Can you walk me through…"
+
+Generated for **Communication**, which the classifier had just labelled a
+**gap** — so the question presupposes exactly what was found missing.
+
+**Not fixed, and not with a lexical guard.** Questions must address the
+candidate in the second person to be questions at all ("Can you walk me
+through your experience with…"), so the first/second-person check that works
+for the answer note would reject correct questions here. The defect is the
+declarative presupposition, which is not lexically separable from a normal
+question.
+
+**Why it is rated low.** A false premise in a question is one the candidate
+notices and corrects in the room. A fabricated answer is one they recite. The
+FR23 guard covers the higher-harm case.
+
+**If it is fixed later**, the honest route is a prompt rule ("ask, never
+assert, that the candidate has done something") plus a re-measurement — not a
+regex. One observation in eighteen is too thin to design a guard against.

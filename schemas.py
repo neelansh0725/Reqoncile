@@ -9,7 +9,17 @@ from __future__ import annotations
 
 from enum import Enum
 
+import re
+
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+# FR23: phrasing that marks text as an answer written *as the candidate*.
+# Deliberately narrow -- second person ("you should explain...") is the correct
+# register for this field and must not trip it.
+_FIRST_PERSON_RE = re.compile(
+    r"\b(?:I|I'm|I've|I'd|I'll|me|my|mine|myself|we|we're|we've|our|ours)\b",
+    re.IGNORECASE,
+)
 
 
 class Category(str, Enum):
@@ -374,6 +384,87 @@ class AlignmentReport(BaseModel):
     def flagged_rewrites(self) -> list[RewriteSuggestion]:
         """Suggestions the grounding check marked (T043) — never hidden."""
         return [r for r in self.rewrites if r.is_flagged]
+
+
+class GapQuestion(BaseModel):
+    """One interview question probing a gap, plus what to address (FR21-FR22).
+
+    **FR23 is enforced by this schema, not requested in the prompt.** The field
+    is `answer_should_cover` -- a description of what an honest answer needs to
+    address -- and a validator rejects first-person phrasing outright. A model
+    that starts drafting "I built a RAG pipeline..." fails validation rather
+    than handing the candidate a fabricated line to memorise.
+
+    Note the same limitation the grounding check carries (T044): this is a
+    lexical guard. It catches answers written *as the candidate*, which is the
+    form a memorisable fabrication takes. It cannot catch an impersonal
+    sentence that still implies experience.
+    """
+
+    question: str = Field(
+        ...,
+        min_length=1,
+        description="A question an interviewer would plausibly ask about this gap.",
+    )
+    answer_should_cover: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "What an honest, defensible answer would need to address. Describe "
+            "the shape of a good answer in the second person or impersonally. "
+            "This is NOT a sample answer and must never be written as the "
+            "candidate speaking."
+        ),
+    )
+
+    @field_validator("question", "answer_should_cover")
+    @classmethod
+    def _tidy(cls, value: str) -> str:
+        cleaned = " ".join(value.split())
+        if not cleaned:
+            raise ValueError("must not be empty or whitespace-only")
+        return cleaned
+
+    @field_validator("answer_should_cover")
+    @classmethod
+    def _no_sample_answer(cls, value: str) -> str:
+        """FR23: reject a drafted answer in the candidate's voice."""
+        if _FIRST_PERSON_RE.search(value):
+            raise ValueError(
+                "must describe what an honest answer covers, not draft one in "
+                "the candidate's voice (first-person phrasing found)"
+            )
+        return value
+
+
+class GapPrep(BaseModel):
+    """What the model returns for one gap (FR21).
+
+    Two to three questions. Fewer than two is not preparation; more than three
+    turns a single gap into a study list nobody reads.
+    """
+
+    questions: list[GapQuestion] = Field(..., min_length=2, max_length=3)
+
+
+class GapPrepRecord(BaseModel):
+    """One gap's prep, with the failure case kept visible (NFR3)."""
+
+    requirement: str
+    questions: list[GapQuestion] = Field(default_factory=list)
+    error: str | None = None
+
+
+class InterviewPrep(BaseModel):
+    """Interview preparation for a report's gaps (FR21-FR23)."""
+
+    run_id: str
+    prepared: list[GapPrepRecord] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+    @property
+    def question_count(self) -> int:
+        return sum(len(p.questions) for p in self.prepared)
 
 
 class RankedJD(BaseModel):
