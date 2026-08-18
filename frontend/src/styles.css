@@ -159,3 +159,57 @@ blockquote {
   border-radius: var(--radius); overflow-x: auto; font-size: .8rem; line-height: 1.5;
 }
 .muted { color: var(--muted); }
+
+/* --- Mode switch and comparison view (T076) ------------------------------ */
+
+.modes { display: flex; gap: .5rem; margin: 0 0 1rem; border-bottom: 1px solid var(--line); }
+.mode {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: .55rem .9rem; font: inherit; color: var(--muted); cursor: pointer;
+  border-radius: 0;
+}
+.mode:hover { color: var(--ink); }
+.mode.on { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+
+.jd-slots { gap: .9rem; }
+.jd-slot {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: .7rem; background: var(--panel); margin-bottom: .7rem;
+}
+.jd-slot .row { display: flex; align-items: center; gap: .5rem; margin-bottom: .45rem; }
+.jd-label {
+  flex: 1; font: inherit; font-weight: 600; padding: .3rem .45rem;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg); color: var(--ink);
+}
+button.link {
+  background: none; border: none; color: var(--accent); font: inherit;
+  cursor: pointer; padding: .2rem .3rem; text-decoration: underline;
+}
+
+.ranking { list-style: none; padding: 0; margin: 1rem 0 0; }
+.ranked {
+  border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: var(--radius); padding: .85rem 1rem; margin-bottom: .8rem;
+  background: var(--panel);
+}
+/* A tie is shown as a tie, not flattened into an order the data cannot
+   support -- the dashed edge makes shared ranks visible at a glance. */
+.ranked.tied { border-left-style: dashed; }
+.rank-head { display: flex; align-items: baseline; gap: .6rem; }
+.rank-head h3 { margin: 0; flex: 1; font-size: 1.05rem; }
+.rank-badge {
+  display: inline-grid; place-items: center; min-width: 1.7rem; height: 1.7rem;
+  border-radius: 50%; background: var(--accent); color: var(--panel);
+  font-weight: 700; font-size: .9rem;
+}
+.rank-score { font-variant-numeric: tabular-nums; font-weight: 600; }
+.rank-reason { margin: .5rem 0 .3rem; }
+.rank-counts { margin: 0; font-size: .88rem; }
+.rank-tie {
+  margin: .5rem 0 0; font-size: .88rem; color: var(--warn);
+  background: var(--warn-bg); padding: .4rem .55rem; border-radius: 6px;
+}
+.comparison .lede { max-width: 46rem; }
+.comparison .caveat { margin-top: 1.2rem; font-size: .85rem; }
+.unranked, .comparison .warnings { margin-top: 1.3rem; }

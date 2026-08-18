@@ -59,6 +59,18 @@ export const analyze = ({ jdText, resumeText, includeRewrites = true, includeSum
     }),
   });
 
+/** Rank 2-3 JDs against one resume (FR17-FR20). */
+export const compare = ({ jds, resumeText, includeRewrites = false }) =>
+  request("/compare", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jds: jds.map(({ label, text }) => ({ label, jd_text: text })),
+      resume_text: resumeText,
+      include_rewrites: includeRewrites,
+    }),
+  });
+
 export const uploadResume = (file) => {
   const form = new FormData();
   form.append("file", file);

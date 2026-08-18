@@ -53,3 +53,95 @@ osfin-vs-nse_ops likewise. **advantest vs osfin is the one I hold less firmly**
 A tie between them would not be a wrong answer.
 
 <!-- RESULT BELOW THIS LINE WAS WRITTEN AFTER THE RUN -->
+
+---
+
+## Result
+
+Run `run_20260818T111956_d477e7f3`, 219s, three JDs against
+`Best_withoutphoto.pdf`.
+
+| rank | JD | score | matched | under-comm. | gaps |
+|---:|---|---:|---:|---:|---:|
+| 1 | `advantest_ai_engineering_intern` | 60.7% | 9 | 6 | 6 |
+| 2 | `osfin_implementation_engineer` | 44.4% | 3 | 2 | 4 |
+| 3 | `nse_technology_operations` | 20.8% | 3 | 4 | 17 |
+
+**The ordering matches the pre-registered manual ranking exactly:
+advantest > osfin > nse_ops. SM4 is met.**
+
+The stated reasons also match the *grounds* given in the pre-registration, not
+just the order:
+
+| JD | predicted shortfall | system's reason |
+|---|---|---|
+| advantest | gaps would be preferred items | "only minor gaps in preferred AI tools" |
+| osfin | the behavioural half, not the technical | "required gaps in independence and communication" |
+| nse_ops | almost nothing evidenced | "heavy gaps across seventeen required … competencies" |
+
+No ties were emitted. The pre-registration allowed for advantest/osfin tying;
+the system separated them by 16 points, which the score spread supports.
+
+### What this test does not establish
+
+The three JDs were chosen to **span** the range, which makes this a favourable
+case for a system whose measured weakness is fine-grained rank (README status
+note, v1.1). A 60.7 / 44.4 / 20.8 spread is exactly the coarse separation the
+system is claimed to do well. **This result confirms that claim; it does not
+extend it.** Ranking three JDs that all scored within a few points of each
+other is the case that would probe the weakness, and it is not tested here.
+
+---
+
+## An unplanned finding: rewording can change a verdict, not just a name
+
+`osfin_implementation_engineer` was run twice within twenty minutes — once in
+a two-JD comparison (`run_20260818T111439_539ad7a2`) and once here
+(`run_20260818T112121_bc942855`). It scored **50.0%** and then **44.4%**.
+
+Both runs extracted **the same nine requirements** with **the same
+denominator**. So this is *not* the denominator effect D3 already documents.
+Four requirements were merely reworded between parses:
+
+| run A | run B | verdict |
+|---|---|---|
+| `automation projects` | `automation projects experience` | matched → matched |
+| `working independently` | `working independently with minimal guidance` | gap → gap |
+| `sense of responsibility and ownership` | `strong sense of responsibility and ownership` | gap → gap |
+| `communication skills` | **`Strong communication skills`** | **weak → gap** |
+
+Three rewordings were inert. **One flipped the verdict**, and that single flip
+is the whole 5.6-point difference.
+
+The flip is not a retrieval difference — both runs retrieved the same top three
+chunks (`skills-fb9d4fa6`, `achievements-a16a3378`, `experience-0f79372f`):
+
+> **A, given `communication skills` → weak:** "The resume lists language
+> fluency and documents community outreach and coordination tasks, which
+> require communication, but it lacks an explicit demonstration of *strong*
+> professional communication skills."
+>
+> **B, given `Strong communication skills` → gap:** "The resume lists language
+> proficiencies and documents business insights, but lacks any evidence of
+> direct customer interaction or communication skills used to gather
+> requirements."
+
+**Each verdict is defensible on its own input.** "Strong communication skills"
+is a higher bar than "communication skills", and the classifier applied the
+bar it was given — run A's justification even reaches for the word *strong* to
+explain why it stopped short of matched. The classifier is behaving correctly.
+The non-determinism is upstream, in whether the extractor carries the JD's
+adjective into the requirement name.
+
+**Why this matters beyond D3 as written.** D3 was recorded as a *naming and
+counting* problem: names vary, so the denominator moves, so absolute scores are
+not quotable. This shows the mechanism is broader — **an extraction rewording
+can propagate into a different verdict on identical evidence.** The existing
+limitation ("absolute match scores are not quotable") already covers the
+consequence, but it understated the cause.
+
+It also bounds this very test: the ordering was reproduced across two runs for
+the JDs common to both (advantest was identical at 60.7%, 9/6/6, in each),
+while osfin moved 5.6 points without changing rank. Coarse separation survived
+the wobble. That is consistent with the v1.1 claim, and is the second
+independent observation of it.

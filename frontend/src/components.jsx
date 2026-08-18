@@ -227,3 +227,82 @@ export function ErroredList({ items }) {
     </section>
   );
 }
+
+
+/**
+ * Multi-JD comparison result (T076, FR19).
+ *
+ * Ties are rendered as ties. The system measured that it separates strong
+ * fits from weak ones but does not resolve fine-grained rank between similar
+ * JDs, so a shared rank is shown as a shared rank rather than broken into an
+ * arbitrary order the numbers do not support.
+ */
+export function ComparisonView({ result, labels }) {
+  const { ranking = [], reports = [], overall_note: note, warnings = [] } = result;
+  const byLabel = Object.fromEntries(reports.map((r) => [labels[r.run_id], r]));
+  const rankedLabels = new Set(ranking.map((r) => r.label));
+  const unranked = reports
+    .map((r) => labels[r.run_id])
+    .filter((label) => !rankedLabels.has(label));
+
+  return (
+    <main className="report comparison">
+      <h2>Which of these fits best</h2>
+      {note && <p className="lede">{note}</p>}
+
+      {ranking.length === 0 && <p className="muted">No ranking was produced.</p>}
+
+      <ol className="ranking">
+        {ranking.map((entry) => {
+          const report = byLabel[entry.label];
+          const scored = report?.score_is_meaningful;
+          return (
+            <li key={entry.label} className={entry.tied_with?.length ? "ranked tied" : "ranked"}>
+              <div className="rank-head">
+                <span className="rank-badge">{entry.rank}</span>
+                <h3>{entry.label}</h3>
+                <span className="rank-score">{scored ? `${Math.round(report.score)}%` : "no score"}</span>
+              </div>
+              <p className="rank-reason">{entry.reason}</p>
+              {report && (
+                <p className="rank-counts muted">
+                  {report.matched.length} matched · {report.weak.length} under-communicated ·{" "}
+                  {report.gaps.length} gaps
+                </p>
+              )}
+              {entry.tied_with?.length > 0 && (
+                <p className="rank-tie">
+                  Too close to separate from {entry.tied_with.join(", ")} — the order between
+                  them is not resolvable, not a judgement that they are identical.
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+
+      {unranked.length > 0 && (
+        <section className="unranked">
+          <h3>Not ranked</h3>
+          <p className="muted">
+            These produced no classifiable requirements, so they have no score and were
+            excluded rather than guessed at.
+          </p>
+          <ul>{unranked.map((label) => <li key={label}>{label}</li>)}</ul>
+        </section>
+      )}
+
+      {warnings.length > 0 && (
+        <section className="warnings">
+          <h3>Notes</h3>
+          <ul>{warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+        </section>
+      )}
+
+      <p className="caveat muted">
+        Scores are comparable within this run only — requirement counts vary between
+        extractions, so each score has its own denominator.
+      </p>
+    </main>
+  );
+}

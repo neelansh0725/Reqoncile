@@ -376,6 +376,53 @@ class AlignmentReport(BaseModel):
         return [r for r in self.rewrites if r.is_flagged]
 
 
+class RankedJD(BaseModel):
+    """One job description's position in a comparison (FR19)."""
+
+    label: str = Field(..., description="Identifier for the JD, as supplied.")
+    rank: int = Field(..., ge=1, description="1 is the best fit. Ties share a rank.")
+    reason: str = Field(
+        ..., min_length=1,
+        description="One line on why it sits here, citing the actual findings.",
+    )
+    tied_with: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Other JDs too close to separate. Non-empty means the order "
+            "between them is not resolvable, not that they are identical."
+        ),
+    )
+
+
+class JDRanking(BaseModel):
+    """What the model returns when ranking several JDs (FR19)."""
+
+    ranked: list[RankedJD] = Field(default_factory=list)
+    overall_note: str = Field(
+        default="",
+        description="One or two sentences on the shape of the comparison.",
+    )
+
+
+class ComparisonResult(BaseModel):
+    """A multi-JD comparison run (FR17-FR20).
+
+    Holds one full report per JD plus the ranking over them. The reports are
+    produced by the unchanged single-JD pipeline -- this mode is a loop and a
+    ranking step, not a different classification method (FR20).
+    """
+
+    run_id: str
+    reports: list[AlignmentReport] = Field(default_factory=list)
+    ranking: list[RankedJD] = Field(default_factory=list)
+    overall_note: str = ""
+    warnings: list[str] = Field(default_factory=list)
+
+    @property
+    def best(self) -> RankedJD | None:
+        return min(self.ranking, key=lambda r: r.rank) if self.ranking else None
+
+
 class RequirementSplit(BaseModel):
     """Requirements partitioned by how they can honestly be assessed (T015a).
 

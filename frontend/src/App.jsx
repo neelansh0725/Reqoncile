@@ -1,12 +1,20 @@
 /** Reqoncile UI (T061-T062, FR15). */
 import { useEffect, useRef, useState } from "react";
-import { analyze, health, uploadResume } from "./api";
+import { analyze, compare, health, uploadResume } from "./api";
 import {
-  EligibilityChecklist, ErroredList, RequirementSections, Rewrites, ScoreHeader,
+  ComparisonView, EligibilityChecklist, ErroredList, RequirementSections, Rewrites,
+  ScoreHeader,
 } from "./components";
 
 export default function App() {
+  const [mode, setMode] = useState("analyse");    // analyse | compare
   const [jdText, setJdText] = useState("");
+  // Compare mode holds its own JD slots so switching modes does not discard
+  // what was already typed into the other one.
+  const [jds, setJds] = useState([
+    { label: "Job 1", text: "" },
+    { label: "Job 2", text: "" },
+  ]);
   const [resumeText, setResumeText] = useState("");
   const [status, setStatus] = useState("idle");   // idle | uploading | running | done | error
   const [error, setError] = useState(null);
@@ -61,6 +69,27 @@ export default function App() {
     }
   }
 
+  async function onCompare(event) {
+    event.preventDefault();
+    setStatus("running");
+    setError(null);
+    setResult(null);
+    try {
+      setResult(await compare({ jds: filledJds, resumeText }));
+      setStatus("done");
+    } catch (e) {
+      setError(e.message);
+      setStatus("error");
+    }
+  }
+
+  function updateJd(index, patch) {
+    setJds((current) => current.map((jd, i) => (i === index ? { ...jd, ...patch } : jd)));
+  }
+
+  const filledJds = jds.filter((jd) => jd.text.trim() && jd.label.trim());
+  const busy = status === "running" || status === "uploading";
+  const canCompare = filledJds.length >= 2 && resumeText.trim() && !busy;
   const canRun = jdText.trim() && resumeText.trim() && status !== "running" && status !== "uploading";
   const report = result?.report;
 
@@ -80,15 +109,75 @@ export default function App() {
         )}
       </header>
 
-      <form className="inputs" onSubmit={onAnalyze}>
-        <div className="field">
-          <label htmlFor="jd">Job description</label>
-          <textarea
-            id="jd" value={jdText} onChange={(e) => setJdText(e.target.value)}
-            placeholder="Paste the full job description…" rows={14} spellCheck={false}
-          />
-          <span className="hint">{jdText.length.toLocaleString()} characters</span>
-        </div>
+      <nav className="modes" role="tablist" aria-label="Mode">
+        <button
+          type="button" role="tab" aria-selected={mode === "analyse"}
+          className={mode === "analyse" ? "mode on" : "mode"}
+          onClick={() => { setMode("analyse"); setResult(null); setStatus("idle"); }}
+        >
+          Analyse one job
+        </button>
+        <button
+          type="button" role="tab" aria-selected={mode === "compare"}
+          className={mode === "compare" ? "mode on" : "mode"}
+          onClick={() => { setMode("compare"); setResult(null); setStatus("idle"); }}
+        >
+          Compare up to 3
+        </button>
+      </nav>
+
+      <form className="inputs" onSubmit={mode === "compare" ? onCompare : onAnalyze}>
+        {mode === "analyse" ? (
+          <div className="field">
+            <label htmlFor="jd">Job description</label>
+            <textarea
+              id="jd" value={jdText} onChange={(e) => setJdText(e.target.value)}
+              placeholder="Paste the full job description…" rows={14} spellCheck={false}
+            />
+            <span className="hint">{jdText.length.toLocaleString()} characters</span>
+          </div>
+        ) : (
+          <div className="field jd-slots">
+            <label>Job descriptions</label>
+            {jds.map((jd, i) => (
+              <div className="jd-slot" key={i}>
+                <div className="row">
+                  <input
+                    className="jd-label" value={jd.label} maxLength={120}
+                    aria-label={`Name for job ${i + 1}`}
+                    onChange={(e) => updateJd(i, { label: e.target.value })}
+                  />
+                  {jds.length > 2 && (
+                    <button
+                      type="button" className="link"
+                      onClick={() => setJds((c) => c.filter((_, j) => j !== i))}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={jd.text} rows={8} spellCheck={false}
+                  placeholder={`Paste job description ${i + 1}…`}
+                  onChange={(e) => updateJd(i, { text: e.target.value })}
+                />
+              </div>
+            ))}
+            {jds.length < 3 && (
+              <button
+                type="button" className="link"
+                onClick={() => setJds((c) => [...c, { label: `Job ${c.length + 1}`, text: "" }])}
+              >
+                + Add another job description
+              </button>
+            )}
+            <span className="hint muted">
+              Each job costs one model call per requirement, so comparing three takes
+              roughly three times as long as analysing one. Rewrites are skipped here —
+              run a single analysis on whichever job you pick.
+            </span>
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor="resume">Your resume</label>
@@ -107,8 +196,10 @@ export default function App() {
         </div>
 
         <div className="actions">
-          <button type="submit" disabled={!canRun}>
-            {status === "running" ? `Analysing… ${elapsed}s` : "Analyse"}
+          <button type="submit" disabled={mode === "compare" ? !canCompare : !canRun}>
+            {status === "running"
+              ? `${mode === "compare" ? "Comparing" : "Analysing"}… ${elapsed}s`
+              : mode === "compare" ? `Compare ${filledJds.length || ""} jobs`.trim() : "Analyse"}
           </button>
           {status === "running" && (
             <span className="hint muted">
@@ -126,7 +217,17 @@ export default function App() {
         </div>
       )}
 
-      {report && (
+      {mode === "compare" && result?.result && (
+        <>
+          <ComparisonView result={result.result} labels={result.labels} />
+          <details className="raw">
+            <summary>Full comparison as Markdown</summary>
+            <pre>{result.markdown}</pre>
+          </details>
+        </>
+      )}
+
+      {mode === "analyse" && report && (
         <main className="report">
           <ScoreHeader report={report} />
           <p className="timings muted">

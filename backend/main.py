@@ -31,9 +31,13 @@ from llm_client import LLMConfigurationError
 from logging_utils import RUN_ID_PATTERN, is_valid_run_id, read_run
 from parsing.resume_parser import ResumeParseError, load_resume_text
 from pipeline import run_pipeline
-from reporting.generate_report import render_markdown
+from agent.comparator import MAX_JDS, compare_jds
+from reporting.generate_report import (
+    render_comparison_markdown,
+    render_markdown,
+)
 from retrieval.embed import EmbeddingError, get_embedding_model
-from schemas import AlignmentReport
+from schemas import AlignmentReport, ComparisonResult
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +92,61 @@ class AnalyzeRequest(BaseModel):
         if not value.strip():
             raise ValueError("must not be blank")
         return value
+
+
+class CompareJD(BaseModel):
+    label: str = Field(..., min_length=1, max_length=120)
+    jd_text: str = Field(..., min_length=1, max_length=MAX_JD_CHARS)
+
+    @field_validator("label", "jd_text")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("must not be blank")
+        return value
+
+
+class CompareRequest(BaseModel):
+    """Several JDs against one resume (FR17-FR20).
+
+    Capped at MAX_JDS: each JD costs one hosted call per requirement, and the
+    free tier is the binding constraint (`docs/providers.md`). Rewrites are off
+    by default -- see `compare_jds`.
+    """
+
+    jds: list[CompareJD] = Field(..., min_length=2, max_length=MAX_JDS)
+    resume_text: str = Field(..., min_length=1, max_length=MAX_RESUME_CHARS)
+    include_rewrites: bool = False
+
+    @field_validator("resume_text")
+    @classmethod
+    def _resume_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("must not be blank")
+        return value
+
+    @field_validator("jds")
+    @classmethod
+    def _unique_labels(cls, value: list[CompareJD]) -> list[CompareJD]:
+        labels = [jd.label.strip() for jd in value]
+        if len(set(labels)) != len(labels):
+            raise ValueError("JD labels must be unique")
+        return value
+
+
+class CompareResponse(BaseModel):
+    """Full per-JD reports plus the ranking over them.
+
+    The reports are returned in full, not just their scores: the ranking is a
+    judgement, and a caller must be able to see the findings it rests on.
+    """
+
+    result: ComparisonResult
+    labels: dict[str, str] = Field(
+        ..., description="run_id -> label, to join reports to ranking entries."
+    )
+    markdown: str
+    total_seconds: float
 
 
 class AnalyzeResponse(BaseModel):
@@ -162,6 +221,45 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
         markdown=render_markdown(report),
         timings=timings.stages,
         total_seconds=timings.total,
+    )
+
+
+@app.post("/compare", response_model=CompareResponse)
+def compare(request: CompareRequest) -> CompareResponse:
+    """Rank several JDs against one resume (FR17-FR20).
+
+    Like `/analyze`, a partial result is a 200: a JD that yields nothing
+    classifiable is returned unranked with a warning, not an error.
+    """
+    started = time.time()
+    try:
+        result = compare_jds(
+            [jd.jd_text for jd in request.jds],
+            request.resume_text,
+            labels=[jd.label.strip() for jd in request.jds],
+            skip_rewrites=not request.include_rewrites,
+        )
+    except LLMConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ResumeParseError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("comparison failed")
+        raise HTTPException(
+            status_code=500, detail=f"comparison failed: {exc}"
+        ) from exc
+
+    labels = {
+        report.run_id: jd.label.strip()
+        for report, jd in zip(result.reports, request.jds)
+    }
+    return CompareResponse(
+        result=result,
+        labels=labels,
+        markdown=render_comparison_markdown(result, labels),
+        total_seconds=time.time() - started,
     )
 
 

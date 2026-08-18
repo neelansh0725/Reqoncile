@@ -248,3 +248,47 @@ The JD is excluded from the ranking rather than re-run until it produced a
 usable score — running until the number cooperates is sample selection, not
 measurement. The claim was never published; it is recorded here because the
 reasoning error is the point.
+
+
+---
+
+## D4 — Extraction rewording can change a verdict, not only a name (medium)
+
+Found in T077, not in the T068 sweep. Recorded here because D3 as written
+understates its own cause.
+
+`osfin_implementation_engineer`, same resume, two runs twenty minutes apart:
+**50.0%** then **44.4%**. Both parses produced the **same nine requirements**
+and therefore the **same denominator**, so this is not the denominator effect
+D3 describes.
+
+Four requirement names were reworded between the parses. Three were inert. One
+was not:
+
+| run A | run B | verdict |
+|---|---|---|
+| `communication skills` | `Strong communication skills` | **weak → gap** |
+
+Both runs retrieved the same top three chunks. The classifier read the same
+evidence and applied a different bar, because the requirement it was given
+carried a different adjective. Each verdict is defensible on its own input:
+"strong communication skills" *is* a higher bar, and run A's justification
+reaches for the word *strong* to explain why it stopped short of matched.
+
+**The classifier is not the defect. Extraction is.** Whether the JD's adjective
+survives into the requirement name is non-deterministic at `temperature=0.0`,
+and that adjective can decide a verdict.
+
+**Deliberately not fixed**, for the same reason as D3: this is model
+non-determinism at the extraction step, and the mitigations (pin the name to
+verbatim JD text, or normalise intensifiers out) each trade a real cost —
+verbatim names are worse to read and unusable as retrieval queries; stripping
+intensifiers discards a distinction the JD actually made. Neither is obviously
+right, and choosing wrongly is worse than documenting accurately.
+
+**What it bounds.** The README already states that absolute match scores are
+not quotable. That limitation is correct and now has a second, independent
+mechanism behind it. It does **not** undermine the ranking claim: in the same
+pair of runs `advantest_ai_engineering_intern` was identical (60.7%, 9/6/6),
+osfin moved 5.6 points, and the rank order did not change
+(`docs/comparison_eval.md`).

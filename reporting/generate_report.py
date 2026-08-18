@@ -13,6 +13,7 @@ from typing import Sequence
 from llm_client import GENERATION, LLMCallError, complete
 from reporting.score import explain_score, score_classifications
 from schemas import (
+    ComparisonResult,
     AlignmentReport,
     Classification,
     MatchLabel,
@@ -211,4 +212,66 @@ def render_markdown(report: AlignmentReport) -> str:
         out.append("")
 
     out += ["---", f"_Run `{report.run_id}`._"]
+    return "\n".join(out)
+
+
+def render_comparison_markdown(
+    result: "ComparisonResult", labels: dict[str, str]
+) -> str:
+    """Render a multi-JD comparison (T075, FR19).
+
+    `labels` maps each report's run_id to its comparison label. Ties are
+    rendered as ties rather than flattened into an order -- see the module
+    docstring in `agent/comparator.py` for why the system declines to assert
+    fine-grained rank.
+    """
+    out: list[str] = ["# JD comparison", ""]
+    by_label = {labels[r.run_id]: r for r in result.reports}
+
+    if result.overall_note:
+        out += [result.overall_note, ""]
+
+    if result.ranking:
+        out += ["| rank | job description | score | matched | under-comm. | gaps |",
+                "|---:|---|---:|---:|---:|---:|"]
+        for r in result.ranking:
+            rep = by_label.get(r.label)
+            score = (f"{rep.score:.0f}%"
+                     if rep and rep.score_is_meaningful else "—")
+            tie = " *(tied)*" if r.tied_with else ""
+            out.append(
+                f"| {r.rank}{tie} | {r.label} | {score} | "
+                f"{len(rep.matched) if rep else 0} | "
+                f"{len(rep.weak) if rep else 0} | "
+                f"{len(rep.gaps) if rep else 0} |"
+            )
+        out.append("")
+        for r in result.ranking:
+            out.append(f"**{r.rank}. {r.label}** — {r.reason}")
+            if r.tied_with:
+                out.append(
+                    f"  Too close to separate from {', '.join(r.tied_with)}; "
+                    "the order between them is not resolvable."
+                )
+            out.append("")
+    else:
+        out += ["_No ranking was produced._", ""]
+
+    unranked = sorted(set(by_label) - {r.label for r in result.ranking})
+    if unranked:
+        out += ["## Not ranked", "",
+                "These produced no classifiable requirements, so they have no "
+                "score and were excluded rather than guessed at.", ""]
+        out += [f"- {label}" for label in unranked] + [""]
+
+    if result.warnings:
+        out.append("> **Note**")
+        out += [f"> - {w}" for w in result.warnings]
+        out.append("")
+
+    out += ["---", "",
+            "Scores are comparable within this run only: requirement counts "
+            "vary between extractions, and each score has its own denominator. "
+            "This system separates strong fits from weak ones; it does not "
+            "resolve fine-grained rank between JDs of similar strength.", ""]
     return "\n".join(out)
