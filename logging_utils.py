@@ -114,6 +114,72 @@ def log_event(
         pass
 
 
+def record_usage(
+    provider: str,
+    model: str,
+    tier: str,
+    outcome: str,
+    *,
+    usage_path: Path | None = None,
+) -> None:
+    """Append one line per outbound model request. Never raises.
+
+    Written at the call boundary rather than inferred from pipeline stages,
+    because inference misses two things:
+
+    * **Callers that bypass the pipeline.** `scripts/eval_classifier.py`
+      classifies directly, so a stage-counting quota check reported 0 calls
+      immediately after 60 real ones.
+    * **Retries.** One requirement that retries a 429 twice consumes three
+      requests but produces one `classify.done`.
+
+    Kept in its own file so it never mixes with the reasoning trace (FR16),
+    which readers of `runs.jsonl` parse by `stage`.
+    """
+    record = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "provider": provider,
+        "model": model,
+        "tier": tier,
+        "outcome": outcome,
+    }
+    path = usage_path or settings.usage_path
+    try:
+        line = json.dumps(record, ensure_ascii=False) + "\n"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with _write_lock:
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+            try:
+                os.write(fd, line.encode("utf-8"))
+            finally:
+                os.close(fd)
+    except (OSError, TypeError, ValueError):
+        pass
+
+
+def read_usage(
+    day: str | None = None,
+    usage_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Return usage records, optionally filtered to one UTC day (YYYY-MM-DD).
+
+    Quotas reset on the provider's clock, which is UTC for Gemini. Filtering
+    on local time would over- or under-count either side of midnight.
+    """
+    path = usage_path or settings.usage_path
+    if not path.exists():
+        return []
+    records = []
+    for line in path.read_text(errors="ignore").splitlines():
+        try:
+            record = json.loads(line)
+        except ValueError:
+            continue
+        if day is None or str(record.get("timestamp", "")).startswith(day):
+            records.append(record)
+    return records
+
+
 def read_run(run_id: str, log_path: Path | None = None) -> list[dict[str, Any]]:
     """Return every event for one run, in write order.
 

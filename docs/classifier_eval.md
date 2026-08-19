@@ -270,10 +270,19 @@ no amount of resampling fixes those.
 against one resume. The spread of the accuracy figure is now characterised;
 its generalisation is not, and never was.
 
-## A measurement-hygiene note
+## A measurement-hygiene note — found here, since fixed
 
 `scripts/eval_classifier.py` does not write to `logs/runs.jsonl`, so **eval
-runs are invisible to the quota counter** used elsewhere in this project — it
+runs were invisible to the quota counter** used elsewhere in this project — it
 reported 0 calls consumed immediately after 60 real ones. Any quota estimate in
-these documents that was taken while eval work was running is therefore an
-undercount. The counter tracks pipeline runs only.
+these documents taken while eval work was running is an undercount.
+
+**Fixed by moving accounting to the call boundary.** `llm_client` now writes one
+line per outbound request to `logs/usage.jsonl`, so every caller is counted
+whether or not it goes through the pipeline, and `scripts/quota_check.py` reads
+that. This also corrects a second undercount the stage-counting approach had:
+**retries consume quota**, and one requirement that retried twice produced a
+single `classify.done` while making three real requests.
+
+The ledger starts from the moment it was added; it has no record of earlier
+runs, including the 60 calls that exposed the problem.

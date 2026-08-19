@@ -98,6 +98,18 @@ to run more than once a day.
 
 Two practical consequences:
 
+**Check before you start:**
+
+```sh
+./.venv/bin/python scripts/quota_check.py                # what today has spent
+./.venv/bin/python scripts/quota_check.py --planned 60   # will this run fit?
+```
+
+`--planned` exits non-zero when the run does not fit, so it can gate a script.
+Usage is counted at the call boundary (`logs/usage.jsonl`), not inferred from
+pipeline stages — inference missed direct callers like `eval_classifier.py`
+entirely, and undercounted retries.
+
 - **Budget the *day*, not just the run.** `gemini-3.5-flash-lite` allows
   **500 requests/day**. A nine-JD sweep costs ~300 under the current
   extraction rule, so two sweeps plus evaluation work exhausts a day. A sweep

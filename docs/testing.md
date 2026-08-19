@@ -1,7 +1,7 @@
 # The test suite
 
 ```sh
-./.venv/bin/python -m pytest        # 88 tests, ~9s
+./.venv/bin/python -m pytest        # 95 tests, ~9s
 ```
 
 **No network, no model call, no quota.** Everything here is pure logic, which
@@ -23,6 +23,7 @@ claim has become false.
 | `test_lexical.py` | Porter2 stemming behaviour and the **D6** concurrency regression |
 | `test_run_id.py` | Run-id format validation, including the trailing-newline bypass |
 | `test_comparator.py` | JD count bounds, duplicate labels, refusing to rank fewer than two scoreable JDs |
+| `test_usage_accounting.py` | The usage ledger, and that **every attempt** is counted — a retried request consumes quota whether or not it succeeded, while a permanent failure still fails fast on one call |
 | `test_api_validation.py` | Request validation at every endpoint boundary, and that a traversal attempt on `/interview-prep/{run_id}` never reaches the handler |
 
 ## Two tests that are unusual on purpose
@@ -42,13 +43,14 @@ than 800 distinct tokens, because the concurrency test is worthless below that
 ## The suite was mutation-checked, and one test failed the check
 
 A suite that passes proves nothing until it has been shown to fail on a real
-break. Three guards were deliberately reverted:
+break. Four guards were deliberately reverted:
 
 | Mutation | Result |
 |---|---|
 | Remove the FR23 first-person validator | **caught** — 3 failures |
 | Always report the score delta, ignoring denominator mismatch | **caught** — 1 failure |
 | Restore the D6 shared stemmer | **NOT caught** — suite stayed green |
+| Count usage per call instead of per attempt | **caught** — 2 failures |
 
 The D6 test as first written used 15 distinct words and passed with the bug
 reintroduced. It was false confidence — precisely the failure mode the rest of

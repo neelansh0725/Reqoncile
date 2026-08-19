@@ -104,6 +104,7 @@ class Settings:
 
     chroma_path: Path
     log_path: Path
+    usage_path: Path
     test_data_dir: Path
 
     def tier(self, name: str) -> TierConfig:
@@ -182,5 +183,6 @@ settings = Settings(
     chunk_min_chars=_env_int("REQONCILE_CHUNK_MIN_CHARS", 25),
     chroma_path=_env_path("REQONCILE_CHROMA_PATH", PROJECT_ROOT / ".chroma"),
     log_path=_env_path("REQONCILE_LOG_PATH", PROJECT_ROOT / "logs" / "runs.jsonl"),
+    usage_path=_env_path("REQONCILE_USAGE_PATH", PROJECT_ROOT / "logs" / "usage.jsonl"),
     test_data_dir=_env_path("REQONCILE_TEST_DATA_DIR", PROJECT_ROOT / "test_data"),
 )

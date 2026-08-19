@@ -302,7 +302,7 @@ suggestions to the resume moved **nothing** — measured, not assumed
 (`docs/version_diff.md`). To move such a requirement, the experience has to
 appear in a project or experience bullet.
 
-**The test suite covers the honesty constraints, not the pipeline.** 87 tests
+**The test suite covers the honesty constraints, not the pipeline.** 95 tests
 (`pytest`, ~9s, no network and no quota) pin the validators and gates that
 carry the claims on this page: the FR23 first-person guard, gap-with-evidence
 rejection, the Weak-only and Gap-only gates, chunk-id stability, run-id path

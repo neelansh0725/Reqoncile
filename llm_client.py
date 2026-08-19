@@ -41,6 +41,7 @@ from config import (
     TierConfig,
     settings,
 )
+from logging_utils import record_usage
 
 logger = logging.getLogger(__name__)
 
@@ -312,14 +313,22 @@ def _invoke_paced(runnable: Any, messages: list[Any], tier: str, **kwargs: Any) 
     attempts = max(1, settings.llm_max_retries)
     last: Exception | None = None
 
+    tier_config = settings.tier(tier)
+
     for attempt in range(attempts):
         limiter.acquire()
         try:
-            return runnable.invoke(messages, **kwargs)
+            result = runnable.invoke(messages, **kwargs)
         except Exception as exc:  # noqa: BLE001
             last = exc
             fault = transport_fault(exc)
             quota = is_rate_limited(exc)
+            # Recorded per attempt, not per call: a retried request consumes
+            # provider quota whether or not it succeeded.
+            record_usage(
+                tier_config.provider, tier_config.model, tier,
+                "rate_limited" if quota else ("transport_fault" if fault else "error"),
+            )
             if not (quota or fault) or attempt == attempts - 1:
                 # Not retryable, or out of attempts. Permanent failures
                 # (bad request, auth, validation) land here on attempt 1.
@@ -331,6 +340,9 @@ def _invoke_paced(runnable: Any, messages: list[Any], tier: str, **kwargs: Any) 
                 _describe(tier), attempt + 1, attempts, backoff,
             )
             time.sleep(backoff)
+        else:
+            record_usage(tier_config.provider, tier_config.model, tier, "ok")
+            return result
 
     raise last if last else RuntimeError("unreachable")
 
