@@ -294,11 +294,18 @@ suggestions to the resume moved **nothing** — measured, not assumed
 (`docs/version_diff.md`). To move such a requirement, the experience has to
 appear in a project or experience bullet.
 
-**There is no automated test suite.** `pytest` finds nothing to run. Every
-measurement in `docs/` is reproducible by re-running the script that produced
-it, and the honesty constraints are enforced by Pydantic validators that fail
-loudly, but nothing guards against regression on a future change. This is a
-legitimate criticism of the repository and is not defended.
+**The test suite covers the honesty constraints, not the pipeline.** 87 tests
+(`pytest`, ~9s, no network and no quota) pin the validators and gates that
+carry the claims on this page: the FR23 first-person guard, gap-with-evidence
+rejection, the Weak-only and Gap-only gates, chunk-id stability, run-id path
+safety, the D6 concurrency fix, and the rule that a score delta is withheld
+when denominators differ. One test asserts a documented *limitation* — that the
+grounding check misses inflation phrased in new words — so the README cannot
+quietly start over-claiming.
+
+**What is not covered:** retrieval quality, classification accuracy, and
+anything requiring a model call. Those are measured by the scripts behind
+`docs/`, re-run by hand, and are not regression-guarded.
 
 **Interview-prep questions are templated.** A "how do you stay current with…"
 question appeared in **6 of 6** gaps, and 15 of 18 answer-notes open with the
@@ -339,6 +346,7 @@ reasoning trace; that trade has not been made (`docs/latency.md`).
 | Latency and the NFR1 budget | `docs/latency.md` |
 | Defects found, fixed, and deliberately not fixed | `docs/defects.md` |
 | Free-tier quotas, measured | `docs/providers.md` |
+| Test suite: what it pins, and the mutation check it failed | `docs/testing.md` |
 | A 30-minute demo script | `docs/demo.md` |
 
 ## Layout
@@ -351,5 +359,6 @@ reporting/   scoring, report assembly, Markdown rendering
 backend/     FastAPI
 frontend/    React + Vite
 scripts/     CLI entry points and evaluation harnesses
+tests/       offline tests for the honesty constraints (no quota)
 docs/        measurements and findings
 ```

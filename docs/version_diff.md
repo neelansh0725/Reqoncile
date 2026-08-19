@@ -153,8 +153,10 @@ apply to this mode and was never expected to** (`docs/latency.md`).
 The `v4` entry originally claimed the anti-fabrication constraints were
 "verified with a pytest suite plus 14 deliberately baited rewrite attempts."
 
-**There is no pytest suite in this repository.** Verification was real but
-ad-hoc: inline scripts under `scripts/` and one-off checks. The claim was
+**At the time, there was no pytest suite in this repository** (one exists now —
+`docs/testing.md` — but it was written *after* this claim, and did not exist
+when the claim was made). Verification was real but ad-hoc: inline scripts
+under `scripts/` and one-off checks. The claim was
 written by the same process this project exists to catch, onto a resume
 version, and it is exactly the failure mode the grounding check (T044) targets
 — a plausible credential with nothing behind it. It has been removed; the entry
@@ -168,7 +170,7 @@ line. The moved verdict does not rest on the removed claim. The run was not
 repeated, because the day's hosted quota was nearly spent; that is a stated
 limitation of this correction rather than a silent one.
 
-**Worth naming as a real gap:** the project has no automated test suite. Every
-measurement in `docs/` is reproducible by re-running the script that produced
-it, but there is no `pytest` invocation that guards against regression. That is
-a legitimate criticism of the repository and is not defended here.
+**This gap has since been closed.** At the time of writing the project had no
+automated test suite. It now has 87 offline tests covering the honesty
+constraints, including a regression test for D6 — see `docs/testing.md`. Model
+quality is still measured by hand, not guarded.
