@@ -204,3 +204,76 @@ the eval labels, and 20 items is small. This is evidence against R1, not proof.
   production choice regardless. The only scored flash run covered 8 of 20
   items and predates the label correction; it is not reported here as a
   comparison.
+
+---
+
+# Spread measurement — is 17/20 reproducible?
+
+Prompted by **D7**: the reasoning model ignores `temperature` entirely, which
+made every measurement in this project one draw from a distribution of unknown
+width. 17/20 is the most quotable number here, so its width was worth knowing.
+
+**Method.** The same 20-pair eval set, three consecutive runs, same model,
+nothing else changed. 60 hosted calls.
+
+| run | accuracy | matched | weak | gap | errored | wall |
+|---|---|---|---|---|---|---|
+| 1 | **17/20 (85%)** | 7/8 | 3/5 | 7/7 | 0 | 63.2s |
+| 2 | **17/20 (85%)** | 7/8 | 3/5 | 7/7 | 0 | 64.5s |
+| 3 | **17/20 (85%)** | 7/8 | 3/5 | 7/7 | 0 | 65.8s |
+
+**Per-item agreement: 20/20.** Not merely the same score — the same verdict on
+every individual requirement, and the identical misclassification set all three
+times: `Model deployment`, `Statistical analysis`, `Version control`.
+
+## The runs were genuinely independent
+
+An identical result invites the obvious objection that something was cached.
+It was not. **The justification wording differs on all 20 items across the
+three runs**, so generation was plainly sampling:
+
+> run 1: "The resume lists Python in the skills section and **specifically**
+> demonstrates its use in the LendingClub…"
+>
+> run 2: "The resume lists Python in the skills section and **explicitly**
+> demonstrates its use in the LendingClub…"
+>
+> run 3: "The resume **explicitly lists** Python in the skills section and
+> **shows it being used as the primary**…"
+
+Different prose every time, identical verdict every time. **Sampling is active;
+the decisions are still stable.**
+
+## What this does and does not establish
+
+**Established:** widespread per-item instability is ruled out. Three runs is
+weak evidence about any *single* item — an item that flipped 20% of the time
+would still look stable across three runs about **52%** of the time. But all 20
+looking stable simultaneously has probability ≈ **2 × 10⁻⁶** under that rate,
+and ≈ 0.002 even at a 10% flip rate. Whatever variance exists is not spread
+evenly across the set.
+
+**Not established:** that no requirement ever flips. D7 documented exactly such
+a flip — `Python` returning `weak` in one run and `matched` in another on
+byte-identical input, against the `advantest` JD. That is a **different
+requirement instance**: different JD, different `source_text`, different
+neighbouring requirements. Both observations stand, and together they suggest
+instability is **concentrated at decision boundaries** rather than distributed
+across the set. A requirement whose evidence is unambiguous stays put; one
+sitting on the matched/weak line does not.
+
+This is consistent with the three persistent errors being persistent: they are
+not coin flips, they are two retrieval failures and one contestable label, and
+no amount of resampling fixes those.
+
+**Not established either:** that the *set* is representative. Twenty pairs
+against one resume. The spread of the accuracy figure is now characterised;
+its generalisation is not, and never was.
+
+## A measurement-hygiene note
+
+`scripts/eval_classifier.py` does not write to `logs/runs.jsonl`, so **eval
+runs are invisible to the quota counter** used elsewhere in this project — it
+reported 0 calls consumed immediately after 60 real ones. Any quota estimate in
+these documents that was taken while eval work was running is therefore an
+undercount. The counter tracks pipeline runs only.

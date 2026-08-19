@@ -246,11 +246,19 @@ parse, and within any single parse there are zero near-duplicates.
 Since the requirement count is the score's denominator, **absolute match
 scores are not quotable.** A score is specific to the run that produced it.
 
-**Classification varies run to run as well, on byte-identical input.** The same
-resume and JD returned `Python: weak` in one run and `Python: matched` in
-another, citing overlapping evidence both times (`docs/defects.md`, D7). The
-classifier eval (17/20) is therefore one draw, not a fixed score; the spread
-across repeated runs has not been measured.
+**Classification can vary run to run on byte-identical input**, but the
+variance is concentrated, not pervasive. The same resume and JD returned
+`Python: weak` in one run and `Python: matched` in another, citing overlapping
+evidence both times (`docs/defects.md`, D7).
+
+The eval set was then run three times to characterise the spread: **17/20 every
+time, with all 20 items receiving the identical verdict in all three runs** —
+and the justification *wording* differed on every item, so generation was
+sampling and the decisions were stable anyway. That rules out widespread
+per-item instability (all 20 appearing stable has probability ≈2×10⁻⁶ if items
+flipped at 20%). It does not rule out occasional flips on requirements sitting
+on the matched/weak boundary, which is what D7 caught. See
+`docs/classifier_eval.md`.
 
 The narrower claim — that the *ordering* of JDs against one resume survives
 extraction volume moving — **has since been measured**, and only partly held:
@@ -336,7 +344,7 @@ reasoning trace; that trade has not been made (`docs/latency.md`).
 
 | What | Where |
 |---|---|
-| Classifier accuracy: 17/20 on a labelled set; gap recall 7/7 | `docs/classifier_eval.md` |
+| Classifier accuracy: **17/20 on a labelled set, reproduced 3/3 runs with identical per-item verdicts**; gap recall 7/7 | `docs/classifier_eval.md` |
 | Retrieval: 8/8 paraphrase probes, 7% mean lexical overlap | `test_data/retrieval_notes.md` |
 | Fabrication: 0 unflagged across 14 baited rewrites | `docs/fabrication_test.md` |
 | SM2 / SM3 demonstrated end to end | `docs/success_metrics.md` |

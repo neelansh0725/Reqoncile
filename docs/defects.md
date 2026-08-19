@@ -434,6 +434,14 @@ run-to-run score movement wholly to extraction; part of it is classification.
 limitation is unchanged and now has a third mechanism behind it. The coarse
 ranking claim (v1.1) survives, having been measured *across* runs and
 therefore across this variance rather than in spite of it. The classifier eval
-(17/20) is a single-sample measurement and should be read as one draw from a
-distribution, not a fixed score — re-running it would likely land within a
-requirement or two either way, and that spread has never been measured.
+(17/20) was a single-sample measurement when this was written. **It has since
+been measured**: three consecutive runs returned 17/20 each, with identical
+per-item verdicts on all 20 (`docs/classifier_eval.md`).
+
+That narrows D7's practical impact without contradicting it. Generation is
+plainly sampling — justification wording differed on every item across the
+three runs — yet the verdicts held. The `Python` flip recorded above was a
+different requirement instance, against a different JD, and the two findings
+together suggest **variance is concentrated at matched/weak decision
+boundaries rather than spread across the set**. A requirement with unambiguous
+evidence stays put; one on the line does not.
