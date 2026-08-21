@@ -59,7 +59,12 @@ def main() -> int:
     if not by_model:
         print("  no model calls recorded today")
 
-    hosted_total = 0
+    # Per model, never summed across models. Quotas are per model
+    # ("GenerateRequestsPerMinutePerProjectPerModel"), so adding a second
+    # hosted model's calls into one total would report a budget that does not
+    # exist -- and would silently mis-gate a run once the generation tier
+    # moved off local Ollama onto a hosted provider.
+    used_by_model: dict[str, int] = {}
     for (provider, model), outcomes in sorted(by_model.items()):
         total = sum(outcomes.values())
         local = provider == PROVIDER_OLLAMA
@@ -67,7 +72,7 @@ def main() -> int:
         if local:
             print(f"  {provider}/{model}: {total} calls ({detail}) — local, no quota")
             continue
-        hosted_total += total
+        used_by_model[model] = used_by_model.get(model, 0) + total
         limit = DAILY_LIMITS.get(model)
         if limit:
             print(f"  {provider}/{model}: {total}/{limit} used, "
@@ -75,16 +80,42 @@ def main() -> int:
         else:
             print(f"  {provider}/{model}: {total} used, daily limit unknown ({detail})")
 
-    limit = DAILY_LIMITS.get(settings.reasoning.model)
-    if args.planned is not None and limit:
-        remaining = limit - hosted_total
-        verdict = "fits" if args.planned <= remaining else "DOES NOT FIT"
-        print(f"\n  planned run: {args.planned} calls against {remaining} "
-              f"remaining — {verdict}")
-        if args.planned > remaining:
-            print("  Do not start it. A sweep that dies halfway wastes what it "
-                  "already spent and produces no usable result.")
-            return 1
+    if args.planned is None:
+        return 0
+
+    # A planned run is gated against every hosted model it would touch. With
+    # the generation tier on a hosted provider that is two models -- or one,
+    # when both tiers share a model, in which case they share the budget too.
+    hosted: dict[str, list[str]] = {}
+    for tier_name in ("reasoning", "generation"):
+        tier = settings.tier(tier_name)
+        if tier.provider != PROVIDER_OLLAMA:
+            # Both tiers on one model means they share the budget, and the
+            # label should say so rather than naming whichever was seen last.
+            hosted.setdefault(tier.model, []).append(tier_name)
+    if not hosted:
+        print(f"\n  planned run: {args.planned} calls — both tiers are local, "
+              "no daily quota applies")
+        return 0
+
+    blocked = False
+    print()
+    for model, tier_names in sorted(hosted.items()):
+        tier = "+".join(tier_names)
+        limit = DAILY_LIMITS.get(model)
+        if not limit:
+            print(f"  {model} ({tier}): daily limit unknown — cannot gate")
+            continue
+        remaining = limit - used_by_model.get(model, 0)
+        fits = args.planned <= remaining
+        blocked |= not fits
+        print(f"  {model} ({tier}): planned {args.planned} against {remaining} "
+              f"remaining — {'fits' if fits else 'DOES NOT FIT'}")
+
+    if blocked:
+        print("  Do not start it. A sweep that dies halfway wastes what it "
+              "already spent and produces no usable result.")
+        return 1
     return 0
 
 

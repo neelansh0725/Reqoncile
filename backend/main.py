@@ -19,6 +19,7 @@ Two decisions worth knowing:
 from __future__ import annotations
 
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 
@@ -79,13 +80,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# The Vite dev server. Single-user local tool, so no auth (TechStack sec. 9).
+# Local Vite dev servers by default. A deployed frontend lives on another
+# origin, so CORS_ALLOW_ORIGINS (comma-separated) adds it without a code
+# change. Deliberately not "*": these endpoints spend a metered API quota, so
+# any origin being able to drive them is a cost problem as well as an abuse one.
+_DEV_ORIGINS = [
+    "http://localhost:5173", "http://127.0.0.1:5173",
+    "http://localhost:4173", "http://127.0.0.1:4173",
+]
+_extra = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173", "http://127.0.0.1:5173",
-        "http://localhost:4173", "http://127.0.0.1:4173",
-    ],
+    allow_origins=_DEV_ORIGINS + _extra,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -179,6 +186,9 @@ class UploadResumeResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     embedding_model_loaded: bool
+    # Which backend served the model. A deployment misconfigured onto torch
+    # looks identical to a healthy one without this.
+    embedding_backend: str
     reasoning_tier: str
     generation_tier: str
 
@@ -196,6 +206,7 @@ def health() -> HealthResponse:
     return HealthResponse(
         status="ok" if loaded else "degraded",
         embedding_model_loaded=loaded,
+        embedding_backend=settings.embedding_backend,
         reasoning_tier=f"{settings.reasoning.provider}/{settings.reasoning.model}",
         generation_tier=f"{settings.generation.provider}/{settings.generation.model}",
     )

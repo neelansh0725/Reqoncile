@@ -1,0 +1,39 @@
+# Render blueprint — backend only. The frontend goes to Vercel.
+services:
+  - type: web
+    name: reqoncile-api
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements-deploy.txt
+    # One worker deliberately. Each worker loads its own copy of the
+    # embedding model (~285MB); two would exceed the 512MB free tier.
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.4"
+      - key: GOOGLE_API_KEY
+        sync: false              # set in the dashboard; never committed
+      - key: REQONCILE_EMBEDDING_BACKEND
+        value: onnx              # required: torch does not fit the free tier
+      - key: REQONCILE_GENERATION_PROVIDER
+        value: google            # no Ollama in a container
+      - key: REQONCILE_GENERATION_MODEL
+        value: gemini-3.5-flash-lite
+      # 45 chunks through ONNX in one call peaks at 653MB; at 8 it is 416MB.
+      - key: REQONCILE_EMBEDDING_BATCH_SIZE
+        value: "8"
+      - key: REQONCILE_LLM_MAX_CONCURRENCY
+        value: "2"               # 512MB and one CPU; 4 buys nothing here
+      # Ephemeral disk. The vector store is a derived cache keyed by resume
+      # content -- losing it on redeploy costs a re-embed, never data.
+      - key: REQONCILE_CHROMA_PATH
+        value: /tmp/.chroma
+      - key: REQONCILE_LOG_PATH
+        value: /tmp/logs/runs.jsonl
+      - key: REQONCILE_USAGE_PATH
+        value: /tmp/logs/usage.jsonl
+      - key: CORS_ALLOW_ORIGINS
+        sync: false              # set to the Vercel URL after the first deploy

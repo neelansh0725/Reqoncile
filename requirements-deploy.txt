@@ -1,0 +1,40 @@
+# Reqoncile — deployment dependencies (see docs/deployment.md)
+#
+# Differs from requirements.txt in exactly two ways, both forced by a 512MB
+# free-tier container:
+#
+#   1. No sentence-transformers / torch. The ONNX backend serves the SAME
+#      all-MiniLM-L6-v2 weights through onnxruntime, which chromadb already
+#      depends on. Measured: identical vectors (cosine 1.0000), identical
+#      retrieval rankings and scores. 602MB peak RSS -> 285MB.
+#   2. No Ollama, no test tooling. Generation runs on the hosted tier.
+#
+# Requires REQONCILE_EMBEDDING_BACKEND=onnx. With this file installed and the
+# backend left as 'torch', startup logs an EmbeddingError and /health reports
+# the model as unavailable -- deliberately non-fatal so an operator can still
+# reach /health to see why, rather than facing a container that will not boot.
+
+# --- Orchestration ---
+langchain==1.3.15
+langchain-community==0.4.2
+
+# --- LLM provider (both tiers run hosted in deployment) ---
+langchain-google-genai==4.3.3
+
+# --- Retrieval (chromadb brings onnxruntime, which is the embedding backend) ---
+chromadb==1.5.9
+
+# --- Lexical retrieval (T026a) ---
+snowballstemmer==3.0.1            # Porter2 stemming for BM25
+
+# --- Document ingestion ---
+pypdf==6.16.1
+
+# --- Backend ---
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+python-multipart==0.0.20
+
+# --- Schemas & config ---
+pydantic==2.13.4
+python-dotenv==1.2.2

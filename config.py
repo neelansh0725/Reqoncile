@@ -99,6 +99,11 @@ class Settings:
     ollama_base_url: str
 
     embedding_model: str
+    # 'torch' (dev) or 'onnx' (deploy) -- same weights, see retrieval/embed.py
+    embedding_backend: str
+    # Lower on a memory-capped host: 45 chunks in one ONNX call peaked at
+    # 653MB, at batch 8 it is 416MB. See docs/deployment.md.
+    embedding_batch_size: int
     top_k: int
     chunk_min_chars: int
 
@@ -179,6 +184,8 @@ settings = Settings(
     embedding_model=_env_str(
         "REQONCILE_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
     ),
+    embedding_backend=_env_str("REQONCILE_EMBEDDING_BACKEND", "torch"),
+    embedding_batch_size=_env_int("REQONCILE_EMBEDDING_BATCH_SIZE", 32),
     top_k=_env_int("REQONCILE_TOP_K", 5),
     chunk_min_chars=_env_int("REQONCILE_CHUNK_MIN_CHARS", 25),
     chroma_path=_env_path("REQONCILE_CHROMA_PATH", PROJECT_ROOT / ".chroma"),
