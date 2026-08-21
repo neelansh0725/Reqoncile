@@ -87,3 +87,35 @@ class TestInterviewPrepPathSafety:
         rid = "run_19990101T000000_deadbeef"
         assert client.post(f"/interview-prep/{rid}?limit=99").status_code == 422
         assert client.post(f"/interview-prep/{rid}?limit=0").status_code == 422
+
+
+class TestFrontendEnvHasNoSecrets:
+    """Vite inlines every `VITE_*` variable into the client bundle as plain
+    text, so anything declared in `frontend/.env.example` is public.
+
+    Verified directly at the time of writing: building with
+    `GOOGLE_API_KEY=<canary>` in the environment produced a bundle containing
+    no trace of it, because Vite only inlines the `VITE_` prefix. This test
+    guards the other half — that nobody adds a non-prefixed secret to the
+    frontend env file and assumes the same protection applies.
+    """
+
+    def test_only_vite_prefixed_names_are_declared(self):
+        from pathlib import Path
+
+        env = Path(__file__).resolve().parent.parent / "frontend" / ".env.example"
+        assert env.exists(), "frontend/.env.example is what keeps Vercel's " \
+                             "import scan off the repo-root backend secrets"
+
+        declared = [
+            line.split("=", 1)[0].strip()
+            for line in env.read_text().splitlines()
+            if "=" in line and not line.strip().startswith("#")
+        ]
+        assert declared, "expected at least one declared variable"
+        offenders = [n for n in declared if not n.startswith("VITE_")]
+        assert not offenders, (
+            f"non-VITE_ names in frontend/.env.example: {offenders}. "
+            "These are not inlined by Vite, so putting a secret here creates a "
+            "false sense of scoping — and Vercel will offer it during import."
+        )
