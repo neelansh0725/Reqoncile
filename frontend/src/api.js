@@ -89,10 +89,20 @@ export const diffVersions = ({ jdText, resumeBefore, resumeAfter }) =>
     }),
   });
 
-export const uploadResume = (file) => {
+/**
+ * PDF/text -> extracted text. One endpoint for both document types.
+ *
+ * `kind` only changes the wording of an error ("job description" vs
+ * "resume"); extraction itself is identical, so there is no second code path
+ * to keep in step with this one.
+ */
+export const uploadDocument = (file, kind = "resume") => {
   const form = new FormData();
   form.append("file", file);
+  form.append("kind", kind);
   return request("/upload-resume", { method: "POST", body: form });
 };
+
+export const uploadResume = (file) => uploadDocument(file, "resume");
 
 export const fetchTrace = (runId) => request(`/trace/${encodeURIComponent(runId)}`);

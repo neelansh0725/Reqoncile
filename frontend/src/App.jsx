@@ -1,6 +1,6 @@
 /** Reqoncile UI (T061-T062, FR15). */
 import { useEffect, useRef, useState } from "react";
-import { analyze, compare, diffVersions, health, interviewPrep, uploadResume } from "./api";
+import { analyze, compare, diffVersions, health, interviewPrep, uploadDocument } from "./api";
 import {
   ComparisonView, EligibilityChecklist, ErroredList, InterviewPrepPanel,
   RequirementSections, Rewrites, ScoreHeader, VersionDiffView,
@@ -27,6 +27,7 @@ export default function App() {
   const [prepStatus, setPrepStatus] = useState("idle");
   const [prepError, setPrepError] = useState(null);
   const fileInput = useRef(null);
+  const jdFileInput = useRef(null);
 
   useEffect(() => {
     health().then(setService).catch(() => setService({ status: "unreachable" }));
@@ -42,21 +43,34 @@ export default function App() {
     return () => clearInterval(id);
   }, [status]);
 
-  async function onUpload(event) {
+  /**
+   * Extract text from an uploaded PDF into either box.
+   *
+   * One handler for both, because the backend has one extraction path. The
+   * only difference is which box receives the text and which note reports it.
+   */
+  async function onUpload(event, kind = "resume") {
     const file = event.target.files?.[0];
     if (!file) return;
+    const input = kind === "jd" ? jdFileInput : fileInput;
     setStatus("uploading");
     setError(null);
     try {
-      const { text, characters, lines } = await uploadResume(file);
-      setResumeText(text);
+      const { text, characters, lines } = await uploadDocument(file, kind);
+      const note = `${file.name} — ${characters} chars, ${lines} lines`;
+      if (kind === "jd") {
+        setJdText(text);
+        setService((s) => ({ ...s, lastJdUpload: note }));
+      } else {
+        setResumeText(text);
+        setService((s) => ({ ...s, lastUpload: note }));
+      }
       setStatus("idle");
-      setService((s) => ({ ...s, lastUpload: `${file.name} — ${characters} chars, ${lines} lines` }));
     } catch (e) {
       setError(e.message);
       setStatus("error");
     } finally {
-      if (fileInput.current) fileInput.current.value = "";
+      if (input.current) input.current.value = "";
     }
   }
 
@@ -179,7 +193,21 @@ export default function App() {
               id="jd" value={jdText} onChange={(e) => setJdText(e.target.value)}
               placeholder="Paste the full job description…" rows={14} spellCheck={false}
             />
-            <span className="hint">{jdText.length.toLocaleString()} characters</span>
+            <div className="hint row">
+              <span>{jdText.length.toLocaleString()} characters</span>
+              <label className="upload">
+                <input
+                  ref={jdFileInput} type="file" accept=".pdf,.txt,.md"
+                  onChange={(e) => onUpload(e, "jd")}
+                />
+                {status === "uploading" ? "Extracting…" : "Upload PDF"}
+              </label>
+            </div>
+            {service?.lastJdUpload && (
+              <span className="hint muted">
+                Extracted from {service.lastJdUpload} — check it before analysing.
+              </span>
+            )}
           </div>
         ) : (
           <div className="field jd-slots">
@@ -233,7 +261,10 @@ export default function App() {
           <div className="hint row">
             <span>{resumeText.length.toLocaleString()} characters</span>
             <label className="upload">
-              <input ref={fileInput} type="file" accept=".pdf,.txt,.md" onChange={onUpload} />
+              <input
+                ref={fileInput} type="file" accept=".pdf,.txt,.md"
+                onChange={(e) => onUpload(e, "resume")}
+              />
               {status === "uploading" ? "Extracting…" : "Upload PDF"}
             </label>
           </div>

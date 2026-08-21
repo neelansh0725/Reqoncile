@@ -119,3 +119,40 @@ class TestFrontendEnvHasNoSecrets:
             "These are not inlined by Vite, so putting a secret here creates a "
             "false sense of scoping — and Vercel will offer it during import."
         )
+
+
+class TestReportPropertiesAreNotSerialized:
+    """`matched`/`weak`/`gaps` are Python properties, not Pydantic fields.
+
+    They therefore never appear in an API response, and JS reading
+    `report.matched` gets `undefined` — then `.length` throws. This shipped
+    twice (the comparison view and the interview-prep panel) because
+    `npm run build` type-checks nothing and never renders the components.
+    """
+
+    NOT_SERIALIZED = ("matched", "weak", "gaps")
+
+    def test_the_properties_really_are_absent_from_the_schema(self):
+        from schemas import AlignmentReport
+
+        for name in self.NOT_SERIALIZED:
+            assert name not in AlignmentReport.model_fields
+            assert isinstance(getattr(AlignmentReport, name), property)
+
+    def test_no_frontend_source_reads_them_off_a_report(self):
+        import re
+        from pathlib import Path
+
+        src = Path(__file__).resolve().parent.parent / "frontend" / "src"
+        pattern = re.compile(r"report\??\.(matched|weak|gaps)\b")
+        offenders = []
+        for path in src.rglob("*.jsx"):
+            for lineno, line in enumerate(path.read_text().splitlines(), 1):
+                if line.lstrip().startswith(("*", "//")):
+                    continue  # documentation naming the trap is fine
+                if pattern.search(line):
+                    offenders.append(f"{path.name}:{lineno}: {line.strip()}")
+        assert not offenders, (
+            "these read fields the API never sends; derive them from "
+            "`report.classifications` via byVerdict():\n  " + "\n  ".join(offenders)
+        )

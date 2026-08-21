@@ -136,8 +136,21 @@ function RequirementRow({ c, runId }) {
   );
 }
 
+/**
+ * Group a report's classifications by verdict.
+ *
+ * The API does not send `matched`/`weak`/`gaps`: those are Python properties
+ * on AlignmentReport, and Pydantic serialises fields only. Reading
+ * `report.matched` from JS yields undefined, so every consumer derives the
+ * groups from `classifications` -- through this one helper, rather than each
+ * filtering separately.
+ */
+export function byVerdict(report, label) {
+  return (report?.classifications ?? []).filter((c) => c.label === label);
+}
+
 export function RequirementSections({ report }) {
-  const byLabel = (l) => report.classifications.filter((c) => c.label === l);
+  const byLabel = (l) => byVerdict(report, l);
   return (
     <>
       {["matched", "weak", "gap"].map((l) => (
@@ -266,8 +279,9 @@ export function ComparisonView({ result, labels }) {
               <p className="rank-reason">{entry.reason}</p>
               {report && (
                 <p className="rank-counts muted">
-                  {report.matched.length} matched · {report.weak.length} under-communicated ·{" "}
-                  {report.gaps.length} gaps
+                  {byVerdict(report, "matched").length} matched ·{" "}
+                  {byVerdict(report, "weak").length} under-communicated ·{" "}
+                  {byVerdict(report, "gap").length} gaps
                 </p>
               )}
               {entry.tied_with?.length > 0 && (
@@ -316,7 +330,7 @@ export function ComparisonView({ result, labels }) {
  * should not imply one is on offer either.
  */
 export function InterviewPrepPanel({ report, onPrepare, prep, status, error }) {
-  const gapCount = report.gaps.length;
+  const gapCount = byVerdict(report, "gap").length;
   if (gapCount === 0) return null;
 
   return (

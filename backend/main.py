@@ -23,7 +23,7 @@ import os
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi import Path as FastPath
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -472,13 +472,24 @@ def interview_prep(
 
 
 @app.post("/upload-resume", response_model=UploadResumeResponse)
-async def upload_resume(file: UploadFile = File(...)) -> UploadResumeResponse:
-    """Extract text from an uploaded resume PDF (FR4).
+async def upload_resume(
+    file: UploadFile = File(...),
+    kind: str = Form("resume"),
+) -> UploadResumeResponse:
+    """Extract text from an uploaded PDF (FR4).
 
     Returns the extracted text for the client to show and then post back to
     /analyze, rather than analysing here -- the user should be able to see and
     correct what was extracted before it is used.
+
+    `kind` is **presentation only**. Both a resume and a job description go
+    through the identical extraction path: `load_resume_text` normalises
+    (NFKC, PDF artefact repair, whitespace) and does nothing resume-specific
+    -- section detection lives in `chunk_resume`, which JD text never reaches.
+    The parameter exists so a failed JD upload does not report "resume is
+    empty", which is the wrong noun and reads as a bug.
     """
+    label = "job description" if kind == "jd" else "resume"
     raw = await file.read()
     if len(raw) > MAX_UPLOAD_BYTES:
         raise HTTPException(
@@ -486,9 +497,11 @@ async def upload_resume(file: UploadFile = File(...)) -> UploadResumeResponse:
             detail=f"file is {len(raw)} bytes; limit is {MAX_UPLOAD_BYTES}",
         )
     if not raw:
-        raise HTTPException(status_code=400, detail="uploaded file is empty")
+        raise HTTPException(
+            status_code=400, detail=f"the uploaded {label} file is empty"
+        )
 
-    suffix = (file.filename or "resume.pdf").rsplit(".", 1)[-1].lower()
+    suffix = (file.filename or "document.pdf").rsplit(".", 1)[-1].lower()
     if suffix not in {"pdf", "txt", "md"}:
         raise HTTPException(
             status_code=400,
@@ -504,7 +517,16 @@ async def upload_resume(file: UploadFile = File(...)) -> UploadResumeResponse:
     try:
         text = load_resume_text(temp_path)
     except ResumeParseError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        # The extractor is resume-named because that is the only document v1
+        # ingested. Re-label rather than fork the extraction path.
+        #
+        # The server-side temp path is scrubbed: it leaked the container's
+        # filesystem layout to the client and told the user nothing useful.
+        # Their filename is what they can actually act on.
+        message = str(exc).replace(str(temp_path), file.filename or "the file")
+        raise HTTPException(
+            status_code=400, detail=message.replace("resume", label)
+        ) from exc
     finally:
         temp_path.unlink(missing_ok=True)
 
