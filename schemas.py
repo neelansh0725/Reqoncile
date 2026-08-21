@@ -554,8 +554,45 @@ class JDRanking(BaseModel):
     ranked: list[RankedJD] = Field(default_factory=list)
     overall_note: str = Field(
         default="",
-        description="One or two sentences on the shape of the comparison.",
+        description=(
+            "At most two short sentences on the shape of the comparison. "
+            "Stop after two sentences."
+        ),
     )
+
+    @field_validator("overall_note")
+    @classmethod
+    def _drop_degenerate_note(cls, value: str) -> str:
+        """Discard a looping note instead of rendering it.
+
+        Observed live: the model ran away on this field, emitting ~1200
+        characters of "properly nicely well fine good ok yes sure alrightly
+        indeed indeedly absolutely totally..." and exhausting the output budget
+        before `ranked` was populated -- so the decorative field cost the
+        actual ranking. Non-deterministic (a local re-run produced a clean
+        103-character note), which is expected: the reasoning model ignores
+        `temperature` entirely (D7).
+
+        Dropped rather than raised. This field is decorative; the ranking is
+        the substance, and failing validation here would discard a good
+        ranking over a bad sentence. Dropped rather than truncated, because
+        the first 200 characters of a degenerate note still read as broken.
+
+        **Length is the only check, deliberately.** A vocabulary-repetition
+        heuristic was written first and measured against the real failure: it
+        scored 0.69 unique words against a healthy note's 0.89, nowhere near
+        separable, because this model degenerates into *varied* filler
+        ("henceforth therefrom thereupon herein therein whereby wherein")
+        rather than repeating one word. The heuristic was removed rather than
+        kept as reassurance that would never fire. Word count separates the
+        two cleanly: 154 against 19.
+        """
+        note = " ".join(value.split())
+        if not note:
+            return ""
+        # Two sentences is generously under 60 words. The observed failure was
+        # 154 and still mid-sentence when the budget ran out.
+        return "" if len(note.split()) > 60 else note
 
 
 class ComparisonResult(BaseModel):

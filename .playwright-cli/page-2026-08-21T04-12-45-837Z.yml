@@ -1,0 +1,111 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - heading "Reqoncile" [level=1] [ref=e5]
+    - paragraph [ref=e6]: Where your resume already matches a job description, where it under-sells you, and where the gaps genuinely are.
+    - paragraph [ref=e28]: "API: ok · reasoning google/gemini-3.5-flash-lite · generation google/gemini-3.5-flash-lite"
+  - tablist "Mode" [ref=e7]:
+    - tab "Analyse one job" [selected] [ref=e8] [cursor=pointer]
+    - tab "Compare up to 3" [ref=e9] [cursor=pointer]
+    - tab "Compare two resume drafts" [ref=e10] [cursor=pointer]
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]: Job description
+      - textbox "Job description" [ref=e14]:
+        - /placeholder: Paste the full job description…
+        - text: "What you’ll do • Build data pipelines • Define first-class metrics Requirements ● Python – 3+ years ● SQL Nice‐to‐have: Airflow, dbt"
+      - generic [ref=e15]:
+        - generic [ref=e16]: 151 characters
+        - generic [ref=e17] [cursor=pointer]:
+          - button "Upload PDF" [ref=e18]
+          - text: Upload PDF
+      - generic [ref=e29]: Extracted from careers-page-jd.pdf — 151 chars, 10 lines — check it before analysing.
+    - generic [ref=e19]:
+      - generic [ref=e20]: Your resume
+      - textbox "Your resume" [ref=e21]:
+        - /placeholder: Paste your resume, or upload a PDF below…
+        - text: "NEELANSH SINGH Phone: +91-9582479870 | Email: singhneelansh07@gmail.com | LinkedIn: neelanshsingh | GitHub: neelansh0725 EDUCATION SRM Institute of Science and Technology Ghaziabad, India B.Tech, Computer Science & Engineering – CGPA: 8.8/10 2023 – 2027 AGDAV Centenary Public School New Delhi, India CBSE Class 12th: 79% | Class 10th: 90.8% 2020 – 2022 EXPERIENCE Logisch Technologies Pvt. Ltd. Noida, Uttar Pradesh Database Development Intern April 2026 – June 2026 – Designed and normalized relational database schemas for the Bitebeats restaurant listing and food ordering platform. – Implemented CRUD operations to efficiently manage restaurant, menu, and customer-related data. – Optimized SQL queries to improve database performance, retrieval efficiency, and data consistency. – Debugged and resolved data-consistency issues across relational schemas through systematic query profiling and log review. Elevate Labs Remote Web Development Intern June 2025 – July 2025 – Built and enhanced frontend components for responsive web applications using modern CSS practices. – Improved user experience through layout refinement and consistent UI design. Achal Welfare Foundation Remote Volunteer June 2025 – July 2025 – Supported educational and community outreach initiatives focused on social development. – Assisted in documentation management and digital coordination activities. PROJECTS E-Commerce ETL Pipeline — Medallion Architecture 2026 PySpark, Databricks, Azure, Apache Airflow, Delta Lake, Docker | GitHub – Built an end-to-end ETL pipeline using PySpark and a Medallion architecture (Bronze/Silver/Gold) to process 99,000+ e-commerce orders across 9 relational source tables into analytics-ready Delta tables. – Implemented data quality validation (row-count thresholds, null-percentage checks, referential integrity) with 18 automated checks logged to a monitoring table for pipeline health tracking and troubleshooting. – Designed 4 business-level aggregate tables (revenue by region/month, delivery performance by seller, customer repeat-purchase rate, payment method distribution) consumed directly from the Gold layer. – Orchestrated the pipeline with Apache Airflow (5-task DAG with failure propagation) running in a containerized Docker environment, with configuration support to deploy the same pipeline on Databricks and Azure (ADLS Gen2 / Azure SQL) without code changes. – Followed idempotent write patterns (partition-based overwrite) and window-function deduplication to ensure safe pipeline re-runs; validated and debugged with a pytest unit test suite. LendingClub Credit Risk Prediction System 2026 Python, LightGBM, SHAP, FastAPI, React, MySQL, MongoDB | GitHub – Built a credit risk model on the LendingClub dataset using LightGBM with SHAP-based explainability to surface key default risk drivers per applicant. – Engineered features (DTI, credit utilization, loan-to-income ratio) and handled class imbalance via SMOTE to improve default-class recall. – Designed a FastAPI + React application supporting real-time and batch credit risk scoring, plus a collateral management module tracking repayment-based collateral release. Retail Sales Analytics Dashboard 2026 Power BI, SQL, MS Excel, Power Query, DAX | GitHub – Built an interactive Power BI dashboard analyzing retail sales data, surfacing revenue trends, regional performance, and category-level KPIs (sales, profit, margin %, YoY growth) with drill-down hierarchies. – Prepared and cleaned data using SQL and Power Query, modeled relationships with a date table, and authored DAX measures for business-level metrics. – Documented actionable business insights (e.g., high-revenue categories running negative margins in specific regions) to support data-driven decision-making. TeamPulse | React, TypeScript, FastAPI, MongoDB, MySQL, Docker | GitHub 2026 – Built a full-stack ops dashboard with JWT auth, role-based access control, and real-time WebSocket updates for team activity tracking. – Integrated GitHub API to flag stale PRs/tasks, with a scheduled worker auto-generating workflow health reports. – Designed a Kanban board with CRUD, dynamic assignment, and aggregated metrics (task status, stale-task detection, live activity feed). Multimodal AI Content Detection System | CNN, BERT, NLP, React, Flask 2026 – Developed a multi-model AI system to detect fake image, text, and audio content using CNN, BERT, and NLP techniques. – Built a React.js + Flask web application with fusion-based prediction and performance evaluation metrics. – Implemented Explainable AI (XAI) techniques to improve model transparency and detection accuracy. SKILLS Programming: C++, JavaScript, Python, HTML5, CSS3, SQL Frontend: React.js, TypeScript, Vite, Tailwind CSS Backend: Node.js, Express.js, FastAPI Databases: MongoDB (NoSQL), MySQL Tools: Git, GitHub, Docker, Postman, VS Code, Claude Code (AI-assisted development) Core Subjects: Data Structures & Algorithms, DBMS, OOP, Operating Systems, Software Development Lifecycle (SDLC) & Agile fundamentals Languages: English (fluent), Japanese (elementary proficiency) ACHIEVEMENTS Hackathons: Smart India Hackathon (SIH) 2025 – Built and pitched the SafeEdu disaster safety platform to a panel of judges; CodeClash 2.0 – Built and presented the Save & Serve food donation platform. Certifications: Deloitte Australia Technology Job Simulation, NPTEL Online Certification (Natural Language Processing), IBM Python 101 for Data Science, AI Training (ACMEGRADE), Introduction to AI (Simplilearn)"
+      - generic [ref=e22]:
+        - generic [ref=e23]: 5,526 characters
+        - generic [ref=e24] [cursor=pointer]:
+          - button "Upload PDF" [ref=e25]
+          - text: Upload PDF
+    - button "Analyse" [ref=e33] [cursor=pointer]
+  - main [ref=e34]:
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - generic [ref=e37]: 86%
+        - text: match
+      - generic [ref=e38]:
+        - paragraph [ref=e39]: 86% — 3 matched, 0 weak (half credit), 1 gaps across 4 scored requirements (2.4 of 2.8 weighted points).
+        - paragraph [ref=e40]: Your resume is genuinely strong in Python, SQL, and Airflow, which directly align with core technical demands of the role. However, your resume contains a genuine gap regarding dbt, as there is no evidence of this requirement present in your background. Because no requirements were under-communicated, rewriting alone cannot resolve this missing qualification.
+    - paragraph [ref=e41]: Completed in 134.61s · jd_parse 8.61s · resume_index 112.81s · classify 12.29s · rewrite 0s · report 0.9s
+    - generic [ref=e42]:
+      - heading "Matched 3" [level=3] [ref=e43]:
+        - text: Matched
+        - generic [ref=e44]: "3"
+      - paragraph [ref=e45]: Your resume clearly evidences these.
+      - list [ref=e46]:
+        - listitem [ref=e47]:
+          - generic [ref=e48]:
+            - strong [ref=e49]: Python
+            - generic [ref=e50]:
+              - generic [ref=e51]: required
+              - generic [ref=e52]: technical
+            - button "why?" [ref=e53] [cursor=pointer]
+          - paragraph [ref=e54]: The resume lists Python in the skills section and shows it in active use within the LendingClub Credit Risk Prediction System project.
+        - listitem [ref=e55]:
+          - generic [ref=e56]:
+            - strong [ref=e57]: SQL
+            - generic [ref=e58]:
+              - generic [ref=e59]: required
+              - generic [ref=e60]: technical
+            - button "why?" [ref=e61] [cursor=pointer]
+          - paragraph [ref=e62]: The resume explicitly details practical SQL usage in both experience and project sections, such as optimizing SQL queries and preparing data using SQL.
+        - listitem [ref=e63]:
+          - generic [ref=e64]:
+            - strong [ref=e65]: Airflow
+            - generic [ref=e66]:
+              - generic [ref=e67]: preferred
+              - generic [ref=e68]: technical
+            - button "why?" [ref=e69] [cursor=pointer]
+          - paragraph [ref=e70]: The resume explicitly states having orchestrated the pipeline with Apache Airflow, detailing a 5-task DAG running in a containerized environment.
+    - generic [ref=e71]:
+      - heading "Under-communicated 0" [level=3] [ref=e72]:
+        - text: Under-communicated
+        - generic [ref=e73]: "0"
+      - paragraph [ref=e74]: None.
+    - generic [ref=e75]:
+      - heading "Gaps 1" [level=3] [ref=e76]:
+        - text: Gaps
+        - generic [ref=e77]: "1"
+      - paragraph [ref=e78]: Your resume does not evidence these. Stated plainly — no rewrite is offered, because there is nothing to surface.
+      - list [ref=e79]:
+        - listitem [ref=e80]:
+          - generic [ref=e81]:
+            - strong [ref=e82]: dbt
+            - generic [ref=e83]:
+              - generic [ref=e84]: preferred
+              - generic [ref=e85]: technical
+            - button "why?" [ref=e86] [cursor=pointer]
+          - paragraph [ref=e87]: The resume makes no mention of dbt anywhere in the experience, projects, or skills sections.
+    - generic [ref=e88]:
+      - heading "Eligibility checklist 1" [level=3] [ref=e89]:
+        - text: Eligibility checklist
+        - generic [ref=e90]: "1"
+      - paragraph [ref=e91]:
+        - text: These were
+        - strong [ref=e92]: not assessed
+        - text: . A resume cannot reliably evidence work authorisation, location or graduation year, so they are listed for you to confirm rather than guessed at — and they do not affect the score.
+      - list [ref=e93]:
+        - listitem [ref=e94]:
+          - generic [ref=e95] [cursor=pointer]:
+            - checkbox "3+ years of experience" [ref=e96]
+            - strong [ref=e97]: 3+ years of experience
+          - generic [ref=e98]: — Python – 3+ years
+    - generic [ref=e99]:
+      - heading "Prepare for the gaps" [level=2] [ref=e100]
+      - paragraph [ref=e101]: Questions an interviewer could ask about each gap, and what an honest answer would need to cover. These are notes to think with — deliberately not answers to memorise.
+      - button "Generating…" [disabled] [ref=e105]
+      - paragraph [ref=e106]: Runs on the local model — roughly 20 seconds per gap, and the first call also waits for the model to load.
+    - group [ref=e103]:
+      - generic "Full report as Markdown" [ref=e104] [cursor=pointer]

@@ -118,3 +118,38 @@ class TestRankedJD:
         # The feature exists because fine-grained rank is not resolvable.
         r = RankedJD(label="a", rank=1, reason="r", tied_with=["b"])
         assert r.tied_with == ["b"]
+
+
+class TestRankingNoteDegeneration:
+    """A runaway `overall_note` must not render, and must not take the
+    ranking down with it. Observed live: 154 words of varied filler."""
+
+    DEGENERATE = " ".join(
+        ["Job 1 is a complete match with zero gaps, whereas Job 2 has gaps"]
+        + "properly nicely well fine good ok yes sure alrightly indeed indeedly "
+          "absolutely totally completely fully entirely overall ultimately "
+          "eventually finally subsequently accordingly consequently therefore "
+          "thus hence henceforth therefrom thereupon herein therein whereby "
+          "wherein hereupon whither whence wherever however nevertheless "
+          "nonetheless yet still instead otherwise alternately alternatively "
+          "rather instead properly nicely well fine good ok yes sure".split()
+    )
+
+    def test_degenerate_note_is_dropped(self):
+        from schemas import JDRanking
+        assert JDRanking(overall_note=self.DEGENERATE).overall_note == ""
+
+    def test_a_real_two_sentence_note_survives(self):
+        from schemas import JDRanking
+        note = ("Advantest is a much stronger fit due to substantial technical "
+                "alignment. Osfin has critical gaps across core required "
+                "competencies, mostly behavioural rather than technical.")
+        assert JDRanking(overall_note=note).overall_note == note
+
+    def test_the_ranking_survives_a_dropped_note(self):
+        # The note is decorative; failing validation would discard a good
+        # ranking over a bad sentence.
+        from schemas import JDRanking
+        r = JDRanking(ranked=[{"label": "a", "rank": 1, "reason": "r"}],
+                      overall_note=self.DEGENERATE)
+        assert len(r.ranked) == 1 and r.overall_note == ""

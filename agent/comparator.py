@@ -54,6 +54,15 @@ matches, or gaps on the requirements that clearly matter most for the role.
   score made of real gaps.
 - Ignore the eligibility checklist entirely — it was never assessed.
 
+## Labels
+
+Every entry's `label` must be **copied exactly** from the `label="..."`
+attribute of the JD it refers to. Do not substitute the job title from the
+text. A label that does not match one you were given is dropped, and that JD
+ends up unranked.
+
+Rank every JD you were given -- do not omit any.
+
 ## Reasons
 
 One line per JD, citing the actual requirements, not the number. "Strongest
@@ -121,7 +130,14 @@ def rank_reports(
         warnings.append(f"Ranking referenced unknown JD(s): {invented}")
     missing = known - {r.label for r in ranking}
     if missing:
-        warnings.append(f"Ranking omitted {sorted(missing)}; shown unranked.")
+        # Distinguish "the model returned nothing" from "it returned labels we
+        # could not match" -- observed live, and the two need different fixes.
+        cause = ("the model returned no ranking at all"
+                 if not result.ranked
+                 else "the model's labels did not match the ones supplied")
+        warnings.append(
+            f"Ranking omitted {sorted(missing)}; shown unranked ({cause})."
+        )
 
     ranking.sort(key=lambda r: r.rank)
     if run_id:
