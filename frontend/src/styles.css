@@ -38,6 +38,11 @@ body {
 .service-bad { color: var(--bad); }
 
 /* --- inputs --- */
+/* The `hidden` attribute is a UA `display: none`, which ANY class-level
+   `display` silently outranks. Without this, `.inputs { display: grid }`
+   leaves a hidden form fully visible. */
+[hidden] { display: none !important; }
+
 .inputs { display: grid; gap: 1.25rem; margin: 1.5rem 0; }
 @media (min-width: 56rem) { .inputs { grid-template-columns: 1fr 1fr; } .actions { grid-column: 1 / -1; } }
 .field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
@@ -292,3 +297,19 @@ button.link {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+
+/* --- Collapsed input summary -------------------------------------------- */
+
+.inputs-collapsed {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--panel); padding: .7rem .9rem; margin-bottom: 1.5rem;
+}
+.inputs-collapsed p { margin: 0; font-size: .9rem; }
+button.secondary {
+  background: none; border: 1px solid var(--line); color: var(--ink);
+  border-radius: 8px; padding: .4rem .8rem; font: inherit; cursor: pointer;
+}
+button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+button.secondary:active { transform: translateY(1px); }

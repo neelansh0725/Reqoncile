@@ -100,3 +100,19 @@ class TestLoadingPlaceholderClaimsNoStage:
             assert claim.lower() not in body.lower(), (
                 f"skeleton claims stage {claim!r}, which the client cannot know"
             )
+
+
+class TestHiddenAttributeIsNotDefeated:
+    """`hidden` is a UA `display: none` and loses to any class `display` rule.
+
+    The collapsed input form relies on it. Without an explicit `[hidden]`
+    rule, `.inputs { display: grid }` outranks it and the "collapsed" form
+    stays fully visible.
+    """
+
+    def test_stylesheet_defends_the_hidden_attribute(self):
+        css = (SRC / "styles.css").read_text()
+        assert re.search(r"\[hidden\]\s*\{[^}]*display:\s*none", css), (
+            "add `[hidden] { display: none !important; }` or the hidden "
+            "attribute is inert wherever a class sets display"
+        )

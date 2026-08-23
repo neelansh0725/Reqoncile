@@ -6,6 +6,12 @@ import {
   ReportSkeleton, RequirementSections, Rewrites, ScoreHeader, VersionDiffView,
 } from "./components";
 
+const MODE_LABEL = {
+  analyse: "Analysed",
+  compare: "Compared",
+  diff: "Compared drafts:",
+};
+
 export default function App() {
   const [mode, setMode] = useState("analyse");    // analyse | compare
   const [jdText, setJdText] = useState("");
@@ -23,6 +29,10 @@ export default function App() {
   const [elapsed, setElapsed] = useState(0);
   // Diff mode keeps its own second resume so switching modes preserves input.
   const [resumeAfter, setResumeAfter] = useState("");
+  // Once results exist the form collapses to a summary: after a wait of a
+  // minute or more, scrolling past your own input to reach the answer is the
+  // wrong order. Reopening restores it untouched.
+  const [inputsOpen, setInputsOpen] = useState(true);
   const [prep, setPrep] = useState(null);
   const [prepStatus, setPrepStatus] = useState("idle");
   const [prepError, setPrepError] = useState(null);
@@ -85,6 +95,7 @@ export default function App() {
     try {
       setResult(await analyze({ jdText, resumeText }));
       setStatus("done");
+      setInputsOpen(false);
     } catch (e) {
       setError(e.message);
       setStatus("error");
@@ -101,6 +112,7 @@ export default function App() {
         jdText, resumeBefore: resumeText, resumeAfter,
       }));
       setStatus("done");
+      setInputsOpen(false);
     } catch (e) {
       setError(e.message);
       setStatus("error");
@@ -127,6 +139,7 @@ export default function App() {
     try {
       setResult(await compare({ jds: filledJds, resumeText }));
       setStatus("done");
+      setInputsOpen(false);
     } catch (e) {
       setError(e.message);
       setStatus("error");
@@ -135,6 +148,18 @@ export default function App() {
 
   function updateJd(index, patch) {
     setJds((current) => current.map((jd, i) => (i === index ? { ...jd, ...patch } : jd)));
+  }
+
+  /** One line describing what was submitted, for the collapsed bar. */
+  function summariseInputs() {
+    const chars = (s) => `${s.trim().length.toLocaleString()} characters`;
+    if (mode === "compare") {
+      return `${filledJds.map((jd) => jd.label).join(", ")} against a resume of ${chars(resumeText)}`;
+    }
+    if (mode === "diff") {
+      return `two resume drafts (${chars(resumeText)} and ${chars(resumeAfter)})`;
+    }
+    return `job description of ${chars(jdText)}, resume of ${chars(resumeText)}`;
   }
 
   const busy = status === "running" || status === "uploading";
@@ -168,27 +193,43 @@ export default function App() {
         <button
           type="button" role="tab" aria-selected={mode === "analyse"}
           className={mode === "analyse" ? "mode on" : "mode"}
-          onClick={() => { setMode("analyse"); setResult(null); setStatus("idle"); }}
+          onClick={() => { setMode("analyse"); setResult(null); setStatus("idle"); setInputsOpen(true); }}
         >
           Analyse one job
         </button>
         <button
           type="button" role="tab" aria-selected={mode === "compare"}
           className={mode === "compare" ? "mode on" : "mode"}
-          onClick={() => { setMode("compare"); setResult(null); setStatus("idle"); }}
+          onClick={() => { setMode("compare"); setResult(null); setStatus("idle"); setInputsOpen(true); }}
         >
           Compare up to 3
         </button>
         <button
           type="button" role="tab" aria-selected={mode === "diff"}
           className={mode === "diff" ? "mode on" : "mode"}
-          onClick={() => { setMode("diff"); setResult(null); setStatus("idle"); }}
+          onClick={() => { setMode("diff"); setResult(null); setStatus("idle"); setInputsOpen(true); }}
         >
           Compare two resume drafts
         </button>
       </nav>
 
-      <form className="inputs" onSubmit={mode === "compare" ? onCompare : mode === "diff" ? onDiff : onAnalyze}>
+      {!inputsOpen && (
+        <div className="inputs-collapsed">
+          <p>
+            <strong>{MODE_LABEL[mode]}</strong>{" "}
+            <span className="muted">{summariseInputs()}</span>
+          </p>
+          <button type="button" className="secondary" onClick={() => setInputsOpen(true)}>
+            Edit inputs
+          </button>
+        </div>
+      )}
+
+      <form
+        className="inputs"
+        hidden={!inputsOpen}
+        onSubmit={mode === "compare" ? onCompare : mode === "diff" ? onDiff : onAnalyze}
+      >
         {mode === "analyse" ? (
           <div className="field">
             <label htmlFor="jd">Job description</label>

@@ -1,0 +1,29 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - heading "Reqoncile" [level=1] [ref=e5]
+    - paragraph [ref=e6]: Where your resume already matches a job description, where it under-sells you, and where the gaps genuinely are.
+    - paragraph [ref=e7]: "The analysis service is unavailable, so a run will fail. Status: unreachable."
+  - tablist "Mode" [ref=e8]:
+    - tab "Analyse one job" [selected] [ref=e9] [cursor=pointer]
+    - tab "Compare up to 3" [ref=e10] [cursor=pointer]
+    - tab "Compare two resume drafts" [ref=e11] [cursor=pointer]
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]: Job description
+      - textbox "Job description" [ref=e15]:
+        - /placeholder: Paste the full job description…
+      - generic [ref=e16]:
+        - generic [ref=e17]: 0 characters
+        - generic [ref=e18] [cursor=pointer]:
+          - button "Upload PDF" [ref=e19]
+          - text: Upload PDF
+    - generic [ref=e20]:
+      - generic [ref=e21]: Your resume
+      - textbox "Your resume" [ref=e22]:
+        - /placeholder: Paste your resume, or upload a PDF below…
+      - generic [ref=e23]:
+        - generic [ref=e24]: 0 characters
+        - generic [ref=e25] [cursor=pointer]:
+          - button "Upload PDF" [ref=e26]
+          - text: Upload PDF
+    - button "Analyse" [disabled] [ref=e28]
