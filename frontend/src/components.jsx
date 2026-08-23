@@ -128,7 +128,16 @@ function RequirementRow({ c, runId }) {
           <span className={`tag ${c.requirement.necessity}`}>{c.requirement.necessity}</span>
           <span className="tag">{c.requirement.category}</span>
         </span>
-        <button className="link" onClick={toggle} aria-expanded={open}>
+        <button
+          className="link"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-label={
+            open
+              ? `Hide the reasoning for ${c.requirement.name}`
+              : `Why ${c.requirement.name} was classified as ${c.label}`
+          }
+        >
           {open ? "hide reasoning" : "why?"}
         </button>
       </div>
@@ -233,6 +242,10 @@ export function Rewrites({ rewrites }) {
 
 /** T015a: never scored, never labelled; for the candidate to confirm. */
 export function EligibilityChecklist({ items }) {
+  // Confirmed items are remembered for the session. Deliberately not
+  // persisted further: this is the candidate's own read of their eligibility,
+  // not a system finding, and the report never scores it (T015a).
+  const [confirmed, setConfirmed] = useState(() => new Set());
   if (!items?.length) return null;
   return (
     <section className="group tone-neutral">
@@ -245,7 +258,20 @@ export function EligibilityChecklist({ items }) {
       <ul className="checklist">
         {items.map((r, i) => (
           <li key={i}>
-            <label><input type="checkbox" /> <strong>{r.name}</strong></label>
+            <label>
+              <input
+                type="checkbox"
+                checked={confirmed.has(r.name)}
+                onChange={() =>
+                  setConfirmed((prev) => {
+                    const next = new Set(prev);
+                    next.has(r.name) ? next.delete(r.name) : next.add(r.name);
+                    return next;
+                  })
+                }
+              />{" "}
+              <strong>{r.name}</strong>
+            </label>
             {/* The JD line is worth showing only when it says more than the
                 requirement name already does. On a short JD it is the whole
                 posting repeated identically under every row. */}

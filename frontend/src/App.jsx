@@ -6,6 +6,12 @@ import {
   ReportSkeleton, RequirementSections, Rewrites, ScoreHeader, VersionDiffView,
 } from "./components";
 
+const MODES = [
+  { id: "analyse", label: "Analyse one job" },
+  { id: "compare", label: "Compare up to 3" },
+  { id: "diff", label: "Compare two resume drafts" },
+];
+
 const MODE_LABEL = {
   analyse: "Analysed",
   compare: "Compared",
@@ -38,6 +44,31 @@ export default function App() {
   const [prepError, setPrepError] = useState(null);
   const fileInput = useRef(null);
   const jdFileInput = useRef(null);
+  const tabRefs = useRef({});
+
+  function selectMode(id) {
+    setMode(id);
+    setResult(null);
+    setStatus("idle");
+    setInputsOpen(true);
+  }
+
+  /** Arrow-key navigation, per the WAI-ARIA tabs pattern. */
+  function onTabKeyDown(event) {
+    const order = MODES.map((m) => m.id);
+    const current = order.indexOf(mode);
+    const next = {
+      ArrowRight: (current + 1) % order.length,
+      ArrowLeft: (current - 1 + order.length) % order.length,
+      Home: 0,
+      End: order.length - 1,
+    }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    const id = order[next];
+    selectMode(id);
+    tabRefs.current[id]?.focus();
+  }
 
   useEffect(() => {
     health().then(setService).catch(() => setService({ status: "unreachable" }));
@@ -189,30 +220,28 @@ export default function App() {
         )}
       </header>
 
-      <nav className="modes" role="tablist" aria-label="Mode">
-        <button
-          type="button" role="tab" aria-selected={mode === "analyse"}
-          className={mode === "analyse" ? "mode on" : "mode"}
-          onClick={() => { setMode("analyse"); setResult(null); setStatus("idle"); setInputsOpen(true); }}
-        >
-          Analyse one job
-        </button>
-        <button
-          type="button" role="tab" aria-selected={mode === "compare"}
-          className={mode === "compare" ? "mode on" : "mode"}
-          onClick={() => { setMode("compare"); setResult(null); setStatus("idle"); setInputsOpen(true); }}
-        >
-          Compare up to 3
-        </button>
-        <button
-          type="button" role="tab" aria-selected={mode === "diff"}
-          className={mode === "diff" ? "mode on" : "mode"}
-          onClick={() => { setMode("diff"); setResult(null); setStatus("idle"); setInputsOpen(true); }}
-        >
-          Compare two resume drafts
-        </button>
-      </nav>
+      <div className="modes" role="tablist" aria-label="Analysis mode">
+        {MODES.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            id={`tab-${id}`}
+            aria-selected={mode === id}
+            aria-controls="mode-panel"
+            // Roving tabindex: the tablist is one stop, arrows move within it.
+            tabIndex={mode === id ? 0 : -1}
+            ref={(el) => { tabRefs.current[id] = el; }}
+            className={mode === id ? "mode on" : "mode"}
+            onKeyDown={onTabKeyDown}
+            onClick={() => selectMode(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
+      <div id="mode-panel" role="tabpanel" aria-labelledby={`tab-${mode}`}>
       {!inputsOpen && (
         <div className="inputs-collapsed">
           <p>
@@ -275,6 +304,10 @@ export default function App() {
                 </div>
                 <textarea
                   value={jd.text} rows={8} spellCheck={false}
+                  // The adjacent input names the job; this labels the body.
+                  // A placeholder is not a label: it disappears on first
+                  // keystroke and is not announced as one.
+                  aria-label={`Text of ${jd.label || `job ${i + 1}`}`}
                   placeholder={`Paste job description ${i + 1}…`}
                   onChange={(e) => updateJd(i, { text: e.target.value })}
                 />
@@ -355,6 +388,15 @@ export default function App() {
           <p>{error}</p>
         </div>
       )}
+
+      </div>
+
+      {/* #12: a run takes minutes. Without this a screen-reader user gets no
+          notification that the report they waited for has arrived. */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {status === "running" ? "Analysis in progress." : ""}
+        {status === "done" && result ? "Analysis complete. Results follow." : ""}
+      </p>
 
       {status === "running" && <ReportSkeleton mode={mode} />}
 
