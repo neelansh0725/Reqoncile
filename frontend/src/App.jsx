@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { analyze, compare, diffVersions, health, interviewPrep, uploadDocument } from "./api";
 import {
   ComparisonView, EligibilityChecklist, ErroredList, InterviewPrepPanel,
-  RequirementSections, Rewrites, ScoreHeader, VersionDiffView,
+  ReportSkeleton, RequirementSections, Rewrites, ScoreHeader, VersionDiffView,
 } from "./components";
 
 export default function App() {
@@ -57,7 +57,7 @@ export default function App() {
     setError(null);
     try {
       const { text, characters, lines } = await uploadDocument(file, kind);
-      const note = `${file.name} — ${characters} chars, ${lines} lines`;
+      const note = `${file.name} (${characters} chars, ${lines} lines)`;
       if (kind === "jd") {
         setJdText(text);
         setService((s) => ({ ...s, lastJdUpload: note }));
@@ -153,10 +153,13 @@ export default function App() {
           Where your resume already matches a job description, where it under-sells you,
           and where the gaps genuinely are.
         </p>
-        {service && (
-          <p className={`service ${service.status !== "ok" ? "service-bad" : ""}`}>
-            API: {service.status}
-            {service.reasoning_tier && ` · reasoning ${service.reasoning_tier} · generation ${service.generation_tier}`}
+        {/* Model ids and tier names are operator detail, not user-facing
+            product copy. Only a degraded service is worth saying out loud,
+            because it changes what the user should expect. */}
+        {service && service.status !== "ok" && (
+          <p className="service service-bad">
+            The analysis service is unavailable, so a run will fail. Status:{" "}
+            {service.status}.
           </p>
         )}
       </header>
@@ -205,7 +208,7 @@ export default function App() {
             </div>
             {service?.lastJdUpload && (
               <span className="hint muted">
-                Extracted from {service.lastJdUpload} — check it before analysing.
+                Extracted from {service.lastJdUpload}. Check it before analysing.
               </span>
             )}
           </div>
@@ -246,7 +249,7 @@ export default function App() {
             )}
             <span className="hint muted">
               Each job costs one model call per requirement, so comparing three takes
-              roughly three times as long as analysing one. Rewrites are skipped here —
+              roughly three times as long as analysing one. Rewrites are skipped here;
               run a single analysis on whichever job you pick.
             </span>
           </div>
@@ -268,7 +271,7 @@ export default function App() {
               {status === "uploading" ? "Extracting…" : "Upload PDF"}
             </label>
           </div>
-          {service?.lastUpload && <span className="hint muted">Extracted from {service.lastUpload} — check it before analysing.</span>}
+          {service?.lastUpload && <span className="hint muted">Extracted from {service.lastUpload}. Check it before analysing.</span>}
         </div>
 
         {mode === "diff" && (
@@ -281,7 +284,7 @@ export default function App() {
             />
             <span className="hint muted">
               The job description is parsed once and the same requirements are used for both
-              versions — otherwise extraction noise would look like progress.
+              versions, otherwise extraction noise would look like progress.
             </span>
           </div>
         )}
@@ -298,8 +301,8 @@ export default function App() {
           </button>
           {status === "running" && (
             <span className="hint muted">
-              One model call per requirement, paced to the free-tier quota — a longer job
-              description takes proportionally longer.
+              One model call per requirement, paced to the free-tier quota, so a longer
+              job description takes proportionally longer.
             </span>
           )}
         </div>
@@ -311,6 +314,8 @@ export default function App() {
           <p>{error}</p>
         </div>
       )}
+
+      {status === "running" && <ReportSkeleton mode={mode} />}
 
       {mode === "compare" && result?.result && (
         <>
@@ -335,10 +340,7 @@ export default function App() {
       {mode === "analyse" && report && (
         <main className="report">
           <ScoreHeader report={report} />
-          <p className="timings muted">
-            Completed in {result.total_seconds}s ·{" "}
-            {Object.entries(result.timings).map(([k, v]) => `${k} ${v}s`).join(" · ")}
-          </p>
+          <p className="timings muted">Completed in {Math.round(result.total_seconds)}s.</p>
           <RequirementSections report={report} />
           <Rewrites rewrites={report.rewrites} />
           <EligibilityChecklist items={report.eligibility} />

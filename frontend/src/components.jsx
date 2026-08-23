@@ -17,15 +17,49 @@ import { fetchTrace } from "./api";
 const LABELS = {
   matched: { title: "Matched", tone: "ok", blurb: "Your resume clearly evidences these." },
   weak: { title: "Under-communicated", tone: "warn", blurb: "The experience is there, but a reader scanning for these could miss it." },
-  gap: { title: "Gaps", tone: "bad", blurb: "Your resume does not evidence these. Stated plainly — no rewrite is offered, because there is nothing to surface." },
+  gap: { title: "Gaps", tone: "bad", blurb: "Your resume does not evidence these. Stated plainly: no rewrite is offered, because there is nothing to surface." },
 };
+
+/**
+ * Placeholder shown while a run is in flight.
+ *
+ * Shaped like the report it will be replaced by, so the page does not jump
+ * when results land. It deliberately does NOT claim a stage ("indexing
+ * resume...", "classifying..."): the client has no way to know. The backend
+ * returns stage timings only in the final response, and no run id exists to
+ * poll against until then, so any stage text would be invented. Elapsed time
+ * on the button is the only honest progress signal available.
+ */
+export function ReportSkeleton({ mode }) {
+  const noun = { compare: "comparison", diff: "diff" }[mode] ?? "report";
+  return (
+    <div className="skeleton" aria-hidden="true" data-testid="report-skeleton">
+      <div className="sk-score">
+        <div className="sk-dial" />
+        <div className="sk-lines">
+          <div className="sk-line w-70" />
+          <div className="sk-line w-90" />
+          <div className="sk-line w-40" />
+        </div>
+      </div>
+      {[0, 1].map((i) => (
+        <div className="sk-group" key={i}>
+          <div className="sk-line w-25" />
+          <div className="sk-line w-80" />
+          <div className="sk-line w-60" />
+        </div>
+      ))}
+      <span className="sr-only">Building your {noun}.</span>
+    </div>
+  );
+}
 
 export function ScoreHeader({ report }) {
   const meaningful = report.score_is_meaningful;
   return (
     <header className="score">
       <div className={`score-dial ${meaningful ? "" : "muted"}`}>
-        <span className="score-value">{meaningful ? `${Math.round(report.score)}%` : "—"}</span>
+        <span className="score-value">{meaningful ? `${Math.round(report.score)}%` : "n/a"}</span>
         <span className="score-label">match</span>
       </div>
       <div className="score-detail">
@@ -186,7 +220,7 @@ export function Rewrites({ rewrites }) {
           <p className="rationale">{r.rationale}</p>
           {r.grounding_flags?.length > 0 && (
             <div className="flags">
-              <strong>Review before using —</strong> this suggestion may add something the
+              <strong>Review before using.</strong> This suggestion may add something the
               original does not support:
               <ul>{r.grounding_flags.map((f, j) => <li key={j}>{f}</li>)}</ul>
             </div>
@@ -197,7 +231,7 @@ export function Rewrites({ rewrites }) {
   );
 }
 
-/** T015a: never scored, never labelled — for the candidate to confirm. */
+/** T015a: never scored, never labelled; for the candidate to confirm. */
 export function EligibilityChecklist({ items }) {
   if (!items?.length) return null;
   return (
@@ -206,13 +240,19 @@ export function EligibilityChecklist({ items }) {
       <p className="blurb">
         These were <strong>not assessed</strong>. A resume cannot reliably evidence work
         authorisation, location or graduation year, so they are listed for you to confirm
-        rather than guessed at — and they do not affect the score.
+        rather than guessed at, and they do not affect the score.
       </p>
       <ul className="checklist">
         {items.map((r, i) => (
           <li key={i}>
             <label><input type="checkbox" /> <strong>{r.name}</strong></label>
-            <span className="muted"> — {r.source_text}</span>
+            {/* The JD line is worth showing only when it says more than the
+                requirement name already does. On a short JD it is the whole
+                posting repeated identically under every row. */}
+            {r.source_text && r.source_text.trim() !== r.name.trim() &&
+              r.source_text.length <= 90 && (
+                <span className="muted"> ({r.source_text})</span>
+              )}
           </li>
         ))}
       </ul>
@@ -226,7 +266,7 @@ export function ErroredList({ items }) {
     <section className="group tone-neutral">
       <h3>Could not assess <span className="count">{items.length}</span></h3>
       <p className="blurb">
-        These failed during analysis. They are listed rather than counted as gaps — the
+        These failed during analysis. They are listed rather than counted as gaps. The
         system did not assess them, so it makes no claim either way.
       </p>
       <ul className="requirements">
@@ -281,12 +321,12 @@ export function ComparisonView({ result, labels }) {
                 <p className="rank-counts muted">
                   {byVerdict(report, "matched").length} matched ·{" "}
                   {byVerdict(report, "weak").length} under-communicated ·{" "}
-                  {byVerdict(report, "gap").length} gaps
+                  {plural(byVerdict(report, "gap").length, "gap")}
                 </p>
               )}
               {entry.tied_with?.length > 0 && (
                 <p className="rank-tie">
-                  Too close to separate from {entry.tied_with.join(", ")} — the order between
+                  Too close to separate from {entry.tied_with.join(", ")}. The order between
                   them is not resolvable, not a judgement that they are identical.
                 </p>
               )}
@@ -314,7 +354,7 @@ export function ComparisonView({ result, labels }) {
       )}
 
       <p className="caveat muted">
-        Scores are comparable within this run only — requirement counts vary between
+        Scores are comparable within this run only. Requirement counts vary between
         extractions, so each score has its own denominator.
       </p>
     </main>
@@ -338,7 +378,7 @@ export function InterviewPrepPanel({ report, onPrepare, prep, status, error }) {
       <h2>Prepare for the gaps</h2>
       <p className="muted">
         Questions an interviewer could ask about each gap, and what an honest answer would
-        need to cover. These are notes to think with — deliberately not answers to memorise.
+        need to cover. These are notes to think with, deliberately not answers to memorise.
       </p>
 
       {!prep && (
@@ -350,7 +390,7 @@ export function InterviewPrepPanel({ report, onPrepare, prep, status, error }) {
       )}
       {status === "preparing" && (
         <p className="hint muted">
-          Runs on the local model — roughly 20 seconds per gap, and the first call also
+          Runs on the hosted model, roughly 20 seconds per gap, and the first call also
           waits for the model to load.
         </p>
       )}
@@ -362,7 +402,7 @@ export function InterviewPrepPanel({ report, onPrepare, prep, status, error }) {
           {record.error ? (
             <p className="prep-declined">
               No questions generated for this gap. The draft was rejected rather than
-              shown — usually because it drifted into writing an answer for you.
+              shown, usually because it drifted into writing an answer for you.
             </p>
           ) : (
             <ol className="prep-questions">
@@ -381,13 +421,18 @@ export function InterviewPrepPanel({ report, onPrepare, prep, status, error }) {
 
       {prep?.gaps_found > (prep?.prep?.prepared?.length ?? 0) && (
         <p className="hint muted">
-          Showing {prep.prep.prepared.length} of {prep.gaps_found} gaps.
+          Showing {prep.prep.prepared.length} of {plural(prep.gaps_found, "gap")}.
         </p>
       )}
     </section>
   );
 }
 
+
+/** "1 gap", not "1 gaps". */
+export function plural(count, noun, suffix = "s") {
+  return `${count} ${noun}${count === 1 ? "" : suffix}`;
+}
 
 const DIRECTION_META = {
   improved: { label: "Stronger", tone: "up", blurb: "These moved up between versions." },
@@ -403,7 +448,7 @@ const DIRECTION_META = {
  *
  * The net-improvement line leads, because that is the one thing FR27 asks be
  * readable at a glance. Indeterminate changes get their own group rather than
- * being folded into "unchanged" — no movement observed is not the same fact
+ * being folded into "unchanged": no movement observed is not the same fact
  * as no movement.
  */
 export function VersionDiffView({ diff }) {
@@ -436,9 +481,16 @@ export function VersionDiffView({ diff }) {
                 <li key={c.requirement}>
                   <span className="diff-req">{c.requirement}</span>
                   <span className="diff-move">
-                    <span className={`chip ${c.before}`}>{c.before}</span>
-                    <span aria-hidden="true"> → </span>
-                    <span className={`chip ${c.after}`}>{c.after}</span>
+                    {c.before === c.after ? (
+                      // An arrow between two identical verdicts says nothing.
+                      <span className={`chip ${c.after}`}>{c.after}</span>
+                    ) : (
+                      <>
+                        <span className={`chip ${c.before}`}>{c.before}</span>
+                        <span aria-hidden="true"> → </span>
+                        <span className={`chip ${c.after}`}>{c.after}</span>
+                      </>
+                    )}
                   </span>
                 </li>
               ))}
