@@ -163,23 +163,22 @@ Worked examples with real payloads: `docs/api_examples.md`.
 **<https://reqoncile.vercel.app>** — frontend on Vercel, API on Render's free
 tier (512 MB, one shared CPU).
 
-**Verified working live:** single-JD analysis, JD and resume PDF upload, the
-reasoning trace, and interview prep for gaps.
+**Verified working live:** single-JD analysis, multi-JD comparison, JD and
+resume PDF upload, the reasoning trace, and interview prep for gaps.
 
-**Not currently usable on the deployed instance:** multi-JD comparison and
-resume version diffing. Both run two or more full pipelines in one request,
-and on the free tier that request did not return — a 2-JD comparison was still
-running at 20 minutes when the client gave up. Both work locally.
+**Known broken on the deployed instance:** resume version diffing returns a
+500 after ~139s. Newly observed and not yet diagnosed — it is *not* a timeout,
+and comparison (which runs the same two-pipeline shape) succeeds, so the cause
+is specific to the diff path rather than to the hosting tier. Version diffing
+works locally.
 
-The cause is measured, not guessed. On the deployed host a single analysis
-spends **94 of its 106 seconds embedding the resume**; the hosted model calls
-are a small minority of the time. Re-indexing the same resume once per JD has
-since been eliminated (chunks already in the collection are no longer
-re-embedded), which removes the duplicated work — but a first index still
-costs ~94s there, so a 2-JD comparison remains slow even when it completes.
-
-Run it locally for those two modes. Nothing about them is deployment-specific;
-they are simply too slow for this hosting tier.
+**On speed.** Embedding, not the hosted model calls, dominates a run here: a
+single analysis spends **94 of its 106 seconds** indexing the resume on this
+shared CPU. Multi-JD comparison used to re-index the *same* resume once per JD
+and did not return at all — a 2-JD comparison was still running at 20 minutes
+when the client gave up. Chunks already present in a collection are no longer
+re-embedded, and the same comparison now completes in **152 seconds**. Expect
+roughly 100–200s per request on this tier regardless.
 
 ## The three v1.2 modes
 
