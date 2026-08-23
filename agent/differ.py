@@ -219,9 +219,14 @@ def render_diff_markdown(diff: VersionDiff) -> str:
     def block(title: str, items: list[RequirementChange], blurb: str) -> None:
         if not items:
             return
+        # `out.extend`, never `out +=`. Augmented assignment binds `out` as a
+        # local for the whole of `block()`, so the *earlier* extend on the line
+        # above raises UnboundLocalError before this line ever runs. Same trap
+        # already hit and commented in reporting/generate_report.py -- and hit
+        # again here anyway, which is why there is now a test.
         out.extend([f"## {title} ({len(items)})", "", blurb, ""])
-        out += [f"- **{c.requirement}** — {c.before.value} → {c.after.value}"
-                for c in items]
+        out.extend(f"- **{c.requirement}** — {c.before.value} → {c.after.value}"
+                   for c in items)
         out.append("")
 
     block("Stronger", diff.improved,
