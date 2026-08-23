@@ -163,22 +163,26 @@ Worked examples with real payloads: `docs/api_examples.md`.
 **<https://reqoncile.vercel.app>** — frontend on Vercel, API on Render's free
 tier (512 MB, one shared CPU).
 
-**Verified working live:** single-JD analysis, multi-JD comparison, JD and
-resume PDF upload, the reasoning trace, and interview prep for gaps.
-
-**Known broken on the deployed instance:** resume version diffing returns a
-500 after ~139s. Newly observed and not yet diagnosed — it is *not* a timeout,
-and comparison (which runs the same two-pipeline shape) succeeds, so the cause
-is specific to the diff path rather than to the hosting tier. Version diffing
-works locally.
+**All modes are verified working live:** single-JD analysis, multi-JD
+comparison, resume version diffing, JD and resume PDF upload, the reasoning
+trace, and interview prep for gaps.
 
 **On speed.** Embedding, not the hosted model calls, dominates a run here: a
 single analysis spends **94 of its 106 seconds** indexing the resume on this
-shared CPU. Multi-JD comparison used to re-index the *same* resume once per JD
-and did not return at all — a 2-JD comparison was still running at 20 minutes
-when the client gave up. Chunks already present in a collection are no longer
-re-embedded, and the same comparison now completes in **152 seconds**. Expect
-roughly 100–200s per request on this tier regardless.
+shared CPU. Measured end to end on the deployed instance:
+
+| request | wall clock |
+|---|---:|
+| `POST /analyze` | ~106s |
+| `POST /compare` (2 JDs) | ~152s |
+| `POST /diff` (2 resume versions) | ~257s |
+
+Comparison used to re-index the *same* resume once per JD and never returned
+at all; chunks already present in a collection are no longer re-embedded.
+Diffing indexes two genuinely different resumes, so it cannot benefit the same
+way and stays the slowest mode. Expect roughly 100–260s per request on this
+tier. The free instance also sleeps when idle, so the first request after a
+pause pays a cold start on top.
 
 ## The three v1.2 modes
 
