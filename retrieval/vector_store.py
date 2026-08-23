@@ -103,9 +103,30 @@ def upsert_chunks(
     Idempotent by `chunk_id`: upserting the same resume twice leaves the
     collection size unchanged, because chunk ids are content-derived (T019)
     and Chroma's upsert replaces by id.
+
+    **Chunks already present are not re-embedded.** Idempotent used to mean
+    "the same result", not "the same cost": embedding ran again every time and
+    was simply overwritten. That is the dominant cost of a run -- 94s of a
+    106s request on the deployed host -- and multi-JD comparison indexed the
+    *same* resume once per JD, paying it twice for nothing.
+
+    This is safe precisely because ids are content-derived: an id already in
+    the collection denotes byte-identical text, so its stored vector is the
+    one this call would have recomputed. Collections are keyed by embedding
+    model too (`resume_collection_name`), so a model change cannot silently
+    reuse incomparable vectors.
+
+    Returns the number of chunks written, which is now the number *embedded*
+    rather than the number supplied.
     """
     if not chunks:
         return 0
+
+    fresh = _without_already_indexed(collection, chunks)
+    if not fresh:
+        logger.debug("all %d chunks already indexed; nothing to embed", len(chunks))
+        return 0
+    chunks = fresh
 
     ids, vectors = embed_chunks(chunks)
     try:
@@ -125,6 +146,25 @@ def upsert_chunks(
         raise VectorStoreError(f"upsert failed: {exc}") from exc
 
     return len(ids)
+
+
+def _without_already_indexed(
+    collection: "Collection",
+    chunks: Sequence[ResumeChunk],
+) -> list[ResumeChunk]:
+    """Drop chunks whose ids the collection already holds.
+
+    A failure to read back existing ids is not fatal: fall back to embedding
+    everything, which is the old behaviour. Being slow beats being wrong.
+    """
+    try:
+        existing = set(collection.get(
+            ids=[chunk.chunk_id for chunk in chunks], include=[]
+        )["ids"])
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("could not read existing ids, re-embedding all: %s", exc)
+        return list(chunks)
+    return [chunk for chunk in chunks if chunk.chunk_id not in existing]
 
 
 def index_resume(text: str, chunks: Sequence[ResumeChunk]) -> "Collection":
