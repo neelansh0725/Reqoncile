@@ -95,3 +95,27 @@ class TestEligibilityCheckboxesAreReal:
     def test_checkbox_is_controlled(self):
         assert "checked={confirmed.has(r.name)}" in COMPONENTS
         assert "onChange=" in COMPONENTS
+
+
+class TestDiffModeHasAJobDescriptionField:
+    """Diff compares two resumes against ONE job description.
+
+    The field was gated on `mode === "analyse"`, so diff mode rendered the
+    multi-JD compare slots instead. Those write to `jds[]` while `onDiff`
+    submits `jdText`, leaving the submit button disabled forever unless
+    `jdText` survived from an earlier analyse run in the same session. That
+    is exactly why it looked fine in manual testing and would fail for a
+    visitor who opened diff mode first.
+    """
+
+    def test_the_single_jd_field_is_not_gated_to_analyse_only(self):
+        assert 'mode !== "compare" ? (' in APP, (
+            "the single JD field must render for analyse AND diff; only "
+            "compare mode takes multiple jobs"
+        )
+        assert 'mode === "analyse" ? (' not in APP
+
+    def test_diff_submits_the_field_the_ui_actually_shows(self):
+        # onDiff reads jdText, so jdText must be what the visible field binds.
+        assert "jdText, resumeBefore: resumeText, resumeAfter," in APP
+        assert 'id="jd" value={jdText}' in APP

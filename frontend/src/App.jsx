@@ -259,7 +259,13 @@ export default function App() {
         hidden={!inputsOpen}
         onSubmit={mode === "compare" ? onCompare : mode === "diff" ? onDiff : onAnalyze}
       >
-        {mode === "analyse" ? (
+        {/* Diff compares TWO RESUMES against ONE job description, so it needs
+            the single JD field, not the multi-JD slots. Only compare mode
+            takes several jobs. Getting this wrong left diff mode with no
+            visible JD field at all: the slots write to `jds[]` while onDiff
+            submits `jdText`, so the button stayed disabled forever unless
+            `jdText` happened to survive from an earlier analyse run. */}
+        {mode !== "compare" ? (
           <div className="field">
             <label htmlFor="jd">Job description</label>
             <textarea
