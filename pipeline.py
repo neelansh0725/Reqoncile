@@ -97,6 +97,28 @@ def run_pipeline(
         log_event(run_id, "pipeline.done", {"empty": True, "timings": timings.stages})
         return report, timings
 
+    if not split.classifiable:
+        # Requirements were extracted, but every one of them is eligibility
+        # (degree, location, work authorisation), which is never scored
+        # (T015a). The report would otherwise come back empty and silent.
+        #
+        # This is the D3 collapse mode on prose-heavy job descriptions: the
+        # extractor reads a narrative requirements section as narrative and
+        # returns almost nothing. Saying so is the difference between "the
+        # tool is broken" and "this job description did not parse".
+        warnings.append(
+            f"Only eligibility items were extracted from this job description "
+            f"({', '.join(r.name for r in split.eligibility)}), and those are "
+            "never scored. There was nothing to assess the resume against. "
+            "Job descriptions written as prose rather than a list of "
+            "requirements are the usual cause."
+        )
+        report = assemble_report(run_id, [], [], split.eligibility, warnings)
+        log_event(run_id, "pipeline.done",
+                  {"empty": True, "eligibility_only": len(split.eligibility),
+                   "timings": timings.stages})
+        return report, timings
+
     # --- Resume ingestion + indexing --------------------------------------
     started = time.time()
     resume_text = load_resume_text(resume_source)

@@ -508,6 +508,13 @@ class VersionDiff(BaseModel):
     changes: list[RequirementChange] = Field(default_factory=list)
     summary: str = ""
     warnings: list[str] = Field(default_factory=list)
+    compared_nothing: bool = Field(
+        default=False,
+        description=(
+            "True when neither version had a scoreable requirement, so the "
+            "failure is in JD extraction rather than in the comparison."
+        ),
+    )
 
     @property
     def improved(self) -> list[RequirementChange]:

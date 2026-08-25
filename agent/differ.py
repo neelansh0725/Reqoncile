@@ -46,6 +46,15 @@ def summarise_diff(diff: VersionDiff) -> str:
     same, unknown = len(diff.unchanged), len(diff.indeterminate)
 
     if not diff.changes:
+        # "Nothing in common" and "nothing at all" are different failures and
+        # need different answers from the reader. The first means the two runs
+        # disagreed about requirement names; the second means the job
+        # description produced nothing to compare against, and no amount of
+        # resume editing will change it.
+        if diff.compared_nothing:
+            return ("Nothing to compare: no scoreable requirements were "
+                    "extracted from the job description, so neither version "
+                    "could be assessed.")
         return "No requirements in common between the two versions to compare."
 
     if up and not down:
@@ -148,8 +157,30 @@ def diff_reports(
             "between them would not mean what it appears to."
         )
 
+    # Neither side had anything scoreable: the failure is upstream of the
+    # diff, in extraction. Distinguished from a name mismatch, which is a
+    # failure *of* the diff.
+    compared_nothing = not before_by_name and not after_by_name
+
+    # The reports know why they are empty. Without this the diff discards the
+    # only explanation available and reports a symptom instead of a cause.
+    #
+    # Warnings both versions share are attributed to neither: the JD parse is
+    # shared, so a JD-level problem is one fact, not two. Only a warning
+    # unique to one side needs saying which side.
+    common = [w for w in before.warnings if w in after.warnings]
+    warnings.extend(w for w in common if w not in warnings)
+    for label, report in (("first", before), ("second", after)):
+        for warning in report.warnings:
+            if warning in common:
+                continue
+            note = f"{label} version: {warning}"
+            if note not in warnings:
+                warnings.append(note)
+
     diff = VersionDiff(
         run_id=run_id,
+        compared_nothing=compared_nothing,
         before_run_id=before.run_id,
         after_run_id=after.run_id,
         before_score=before.score if comparable and before.score_is_meaningful else None,

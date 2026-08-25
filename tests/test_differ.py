@@ -111,3 +111,60 @@ class TestOrdering:
         )
         # The point of the view is what changed.
         assert diff.changes[0].requirement == "zzz"
+
+
+class TestEmptyExtractionIsDiagnosable:
+    """A prose-heavy JD can extract nothing scoreable (D3 collapse).
+
+    Reported from the deployed site: a diff of two genuinely similar resumes
+    returned "No requirements in common between the two versions to compare",
+    which reads as a bug in the comparison. The comparison was fine; the job
+    description had produced nothing to compare against, and every layer
+    dropped that fact on the way to the user.
+    """
+
+    def test_two_empty_reports_blame_extraction_not_the_diff(self):
+        from reporting.generate_report import assemble_report
+
+        empty = lambda rid: assemble_report(rid, [], [], [], [])
+        diff = diff_reports(empty("a"), empty("b"))
+        assert diff.compared_nothing is True
+        assert "Nothing to compare" in diff.summary
+        assert "extracted" in diff.summary
+
+    def test_a_name_mismatch_still_reads_as_a_name_mismatch(self):
+        # The two failures must stay distinguishable: one is upstream in
+        # extraction, the other is the diff failing to line names up.
+        diff = diff_reports(make_report("a", {"Python": M}),
+                            make_report("b", {"Python 3": M}))
+        assert diff.compared_nothing is False
+        assert "No requirements in common" in diff.summary
+        assert any("only one version" in w for w in diff.warnings)
+
+    def test_report_warnings_reach_the_diff(self):
+        from reporting.generate_report import assemble_report
+
+        why = "Only eligibility items were extracted from this job description."
+        diff = diff_reports(assemble_report("a", [], [], [], [why]),
+                            assemble_report("b", [], [], [], [why]))
+        assert any(why in w for w in diff.warnings), (
+            "the reports' own explanation must survive into the diff"
+        )
+
+    def test_a_shared_cause_is_stated_once(self):
+        from reporting.generate_report import assemble_report
+
+        why = "Only eligibility items were extracted from this job description."
+        diff = diff_reports(assemble_report("a", [], [], [], [why]),
+                            assemble_report("b", [], [], [], [why]))
+        # The JD parse is shared, so a JD-level problem is one fact, not two.
+        assert sum(why in w for w in diff.warnings) == 1
+        assert not any(w.startswith(("first version", "second version"))
+                       for w in diff.warnings)
+
+    def test_a_one_sided_warning_says_which_side(self):
+        from reporting.generate_report import assemble_report
+
+        diff = diff_reports(assemble_report("a", [], [], [], ["resume was empty"]),
+                            assemble_report("b", [], [], [], []))
+        assert any(w.startswith("first version:") for w in diff.warnings)
