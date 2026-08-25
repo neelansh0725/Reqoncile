@@ -119,3 +119,23 @@ class TestDiffModeHasAJobDescriptionField:
         # onDiff reads jdText, so jdText must be what the visible field binds.
         assert "jdText, resumeBefore: resumeText, resumeAfter," in APP
         assert 'id="jd" value={jdText}' in APP
+
+
+class TestEveryPasteBoxAcceptsAPdf:
+    """All three input boxes take the same kinds of document, so all three
+    offer the same control. The revised-resume box was the odd one out."""
+
+    def test_three_upload_controls_exist(self):
+        assert APP.count('className="upload"') == 3
+
+    def test_each_upload_targets_a_distinct_box(self):
+        for target in ('"jd"', '"resume"', '"resumeAfter"'):
+            assert f"onUpload(e, {target})" in APP, f"no upload wired for {target}"
+
+    def test_each_upload_has_its_own_input_ref(self):
+        for ref in ("jdFileInput", "fileInput", "resumeAfterFileInput"):
+            assert f"ref={{{ref}}}" in APP, f"{ref} not attached to an input"
+
+    def test_every_box_shows_a_character_count(self):
+        for state in ("jdText", "resumeText", "resumeAfter"):
+            assert f"{{{state}.length.toLocaleString()}} characters" in APP

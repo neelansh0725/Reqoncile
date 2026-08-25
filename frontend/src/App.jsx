@@ -44,6 +44,7 @@ export default function App() {
   const [prepError, setPrepError] = useState(null);
   const fileInput = useRef(null);
   const jdFileInput = useRef(null);
+  const resumeAfterFileInput = useRef(null);
   const tabRefs = useRef({});
 
   function selectMode(id) {
@@ -90,18 +91,24 @@ export default function App() {
    * One handler for both, because the backend has one extraction path. The
    * only difference is which box receives the text and which note reports it.
    */
-  async function onUpload(event, kind = "resume") {
+  async function onUpload(event, target = "resume") {
     const file = event.target.files?.[0];
     if (!file) return;
-    const input = kind === "jd" ? jdFileInput : fileInput;
+    const kind = target === "jd" ? "jd" : "resume";
+    const input = {
+      jd: jdFileInput, resume: fileInput, resumeAfter: resumeAfterFileInput,
+    }[target];
     setStatus("uploading");
     setError(null);
     try {
       const { text, characters, lines } = await uploadDocument(file, kind);
       const note = `${file.name} (${characters} chars, ${lines} lines)`;
-      if (kind === "jd") {
+      if (target === "jd") {
         setJdText(text);
         setService((s) => ({ ...s, lastJdUpload: note }));
+      } else if (target === "resumeAfter") {
+        setResumeAfter(text);
+        setService((s) => ({ ...s, lastAfterUpload: note }));
       } else {
         setResumeText(text);
         setService((s) => ({ ...s, lastUpload: note }));
@@ -362,6 +369,21 @@ export default function App() {
               placeholder="Paste the newer version…"
               onChange={(e) => setResumeAfter(e.target.value)}
             />
+            <div className="hint row">
+              <span>{resumeAfter.length.toLocaleString()} characters</span>
+              <label className="upload">
+                <input
+                  ref={resumeAfterFileInput} type="file" accept=".pdf,.txt,.md"
+                  onChange={(e) => onUpload(e, "resumeAfter")}
+                />
+                {status === "uploading" ? "Extracting…" : "Upload PDF"}
+              </label>
+            </div>
+            {service?.lastAfterUpload && (
+              <span className="hint muted">
+                Extracted from {service.lastAfterUpload}. Check it before analysing.
+              </span>
+            )}
             <span className="hint muted">
               The job description is parsed once and the same requirements are used for both
               versions, otherwise extraction noise would look like progress.

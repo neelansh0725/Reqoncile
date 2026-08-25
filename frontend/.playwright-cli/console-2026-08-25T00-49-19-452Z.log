@@ -1,0 +1,3 @@
+[      87ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:4173/api/health:0
+[      87ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:4173/favicon.ico:0
+[    3656ms] [ERROR] Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST')) @ http://localhost:4173/api/upload-resume:0
