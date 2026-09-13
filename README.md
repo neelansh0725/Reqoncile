@@ -13,7 +13,18 @@ Those need different responses — a gap should be stated plainly, an
 under-communicated skill should be rewritten — and telling them apart is the
 part that cannot be done by counting keywords.
 
-> **Status: v1.2 — all three v1.1 feature modes shipped.** Multi-JD comparison
+> **Status: v1.4 — UI pass, and two bugs a real user found.** The interface
+> was audited against screenshots of the deployed site: the input form now
+> collapses once results exist, a skeleton replaces a bare spinner on a
+> multi-minute wait, operator telemetry is out of the product surface, and the
+> mode switcher is a real tab pattern. Two genuine bugs surfaced from actual
+> use, not from review: **diff mode had no job-description field** (it rendered
+> the multi-JD compare slots, so the submit button could never enable), and a
+> job description that extracts nothing reported *"no requirements in common"*,
+> blaming the comparison for an extraction failure. Both fixed, both now
+> guarded.
+>
+> **Earlier, v1.2 — all three v1.1 feature modes shipped.** Multi-JD comparison
 > (FR17–FR20), interview prep for gaps (FR21–FR23), and resume version diffing
 > (FR24–FR27), each validated against its success metric and each with its
 > limitations measured: `docs/comparison_eval.md`, `docs/interview_prep.md`,
@@ -150,7 +161,7 @@ cd frontend && npm install && npm run dev # http://localhost:5173
 | `POST /compare` | 2–3 JDs + one resume → per-JD reports plus a ranking that reports ties (FR17–FR20) |
 | `POST /diff` | One JD + two resume versions → what moved between them (FR24–FR27) |
 | `POST /interview-prep/{run_id}` | Questions for a completed run's gaps, and what an honest answer covers (FR21–FR23) |
-| `POST /upload-resume` | PDF → extracted text, for the user to check before analysing |
+| `POST /upload-resume` | PDF or text → extracted text, for the user to check before analysing. Serves all three paste boxes; the optional `kind` field only changes error wording |
 | `GET /trace/{run_id}` | The classifier's reasoning trace: what was retrieved, what was cited, what was rejected (FR16) |
 | `GET /docs` | Generated OpenAPI docs |
 
@@ -272,6 +283,16 @@ parse, and within any single parse there are zero near-duplicates.
 Since the requirement count is the score's denominator, **absolute match
 scores are not quotable.** A score is specific to the run that produced it.
 
+**Measured on a real comparison.** Diffing two versions of one resume against
+one job description, four times, with nothing changed between runs: the same
+job description yielded **11, 13, 16 and 17 requirements**, and the resulting
+improvement ranged from **+9 to +27 points**. Every run agreed on the
+direction (all four improved, three with no regression at all) and on which
+requirements moved most reliably. None agreed on the number.
+
+The practical rule this gives: **quote the direction and the specific
+requirements that moved, never the percentage.**
+
 **Classification can vary run to run on byte-identical input**, but the
 variance is concentrated, not pervasive. The same resume and JD returned
 `Python: weak` in one run and `Python: matched` in another, citing overlapping
@@ -328,7 +349,7 @@ suggestions to the resume moved **nothing** — measured, not assumed
 (`docs/version_diff.md`). To move such a requirement, the experience has to
 appear in a project or experience bullet.
 
-**The test suite covers the honesty constraints, not the pipeline.** 95 tests
+**The test suite covers the honesty constraints, not the pipeline.** 147 tests
 (`pytest`, ~9s, no network and no quota) pin the validators and gates that
 carry the claims on this page: the FR23 first-person guard, gap-with-evidence
 rejection, the Weak-only and Gap-only gates, chunk-id stability, run-id path

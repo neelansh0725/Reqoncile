@@ -1,7 +1,7 @@
 # The test suite
 
 ```sh
-./.venv/bin/python -m pytest        # 95 tests, ~9s
+./.venv/bin/python -m pytest        # 147 tests, ~11s
 ```
 
 **No network, no model call, no quota.** Everything here is pure logic, which
@@ -25,6 +25,10 @@ claim has become false.
 | `test_comparator.py` | JD count bounds, duplicate labels, refusing to rank fewer than two scoreable JDs |
 | `test_usage_accounting.py` | The usage ledger, and that **every attempt** is counted — a retried request consumes quota whether or not it succeeded, while a permanent failure still fails fast on one call |
 | `test_api_validation.py` | Request validation at every endpoint boundary, and that a traversal attempt on `/interview-prep/{run_id}` never reaches the handler |
+| `test_render_diff.py` | Every branch of the diff renderer, plus a parametrised "never raises" case. Added after the renderer shipped broken: nothing called it, so nothing caught it |
+| `test_index_caching.py` | Chunks already in a collection are not re-embedded, and an unreadable collection falls back to re-embedding rather than assuming |
+| `test_frontend_copy.py` | No em-dashes in UI copy, no operator telemetry (model ids, stage names) in product surfaces, `…` over `...`, and that the loading skeleton never names a pipeline stage it cannot know |
+| `test_frontend_a11y.py` | Every textarea labelled, the tab pattern complete (roving tabindex, arrow keys, controlled panel), results announced via a live region, contextual names on disclosure buttons, and all three paste boxes offering PDF upload |
 
 ## Two tests that are unusual on purpose
 
@@ -43,27 +47,39 @@ than 800 distinct tokens, because the concurrency test is worthless below that
 ## The suite was mutation-checked, and one test failed the check
 
 A suite that passes proves nothing until it has been shown to fail on a real
-break. Four guards were deliberately reverted:
+break. Every guard here was deliberately reverted to check it fires:
 
 | Mutation | Result |
 |---|---|
 | Remove the FR23 first-person validator | **caught** — 3 failures |
 | Always report the score delta, ignoring denominator mismatch | **caught** — 1 failure |
-| Restore the D6 shared stemmer | **NOT caught** — suite stayed green |
 | Count usage per call instead of per attempt | **caught** — 2 failures |
+| Reintroduce `out +=` in the diff renderer | **caught** — 4 failures |
+| Re-embed chunks already in the collection | **caught** — 2 failures |
+| Drop the "nothing extracted" vs "no names in common" distinction | **caught** — 1 failure |
+| Reintroduce an em-dash into UI copy | **caught** |
+| Remove the tab keyboard handler | **caught** |
+| Point the third upload control at the wrong box | **caught** |
+| Restore the D6 shared stemmer | **NOT caught** — suite stayed green |
+| Delete the compare-mode textarea labels | **NOT caught** — suite stayed green |
 
-The D6 test as first written used 15 distinct words and passed with the bug
-reintroduced. It was false confidence — precisely the failure mode the rest of
-this project is about, occurring inside the thing meant to prevent it.
+**Two tests failed their own mutation check.** Both were lint-shaped: they
+grepped source rather than executing it, and both were quietly inert.
 
-The cause is that the bug needs enough token *variety* for concurrent calls to
-interleave destructively. The fix was to build the corpus from the tracked
-sample JDs (~1,100 distinct tokens), then verify **both directions**: the test
-fails with the bug restored, and passes with the fix in place. Only then was it
-kept.
+The D6 concurrency test used 15 distinct words and passed with the bug
+reintroduced. The bug needs enough token *variety* for concurrent calls to
+interleave destructively. Rebuilt against the tracked sample JDs (~1,100
+distinct tokens) and verified in both directions before being kept. The real
+resume cannot be used — it is gitignored — so the public JD set stands in.
 
-The real resume cannot be used for this — it is gitignored — so the corpus is
-the public JD set, which is enough.
+The textarea-label test matched `<textarea\b[^>]*?/>`, which cannot span the
+`>` inside `onChange={(e) => ...}`. It therefore matched no multi-line
+textarea at all and passed with every label deleted. Fixed, re-verified in
+both directions, and a guard-the-guard test now asserts the matcher sees every
+textarea in the file.
+
+The lesson generalised: **a test that greps source is not trusted until it has
+been shown to fail.** Both inert tests looked entirely reasonable in review.
 
 ## What is not covered
 
